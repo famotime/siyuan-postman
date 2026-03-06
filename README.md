@@ -1,52 +1,48 @@
-# siyuan-postman — Send SiYuan Documents as Email
+# 邮递员（siyuan-postman）— 一键将思源文档发送为邮件
 
-A [SiYuan](https://b3log.org/siyuan) plugin that lets you send documents as email with one click — either as **HTML body** or as **Markdown attachment**.
+[思源笔记](https://b3log.org/siyuan)插件，支持将文档一键发送为邮件——可作为 **HTML 正文**或 **Markdown 附件**发送。
 
-## Features
+## 功能特性
 
-- 📧 **Send as Email Body** — renders the document as HTML email content
-- 📎 **Send as Attachment** — exports document as `.md` file attachment
-- ⚙️ **Preset SMTP Providers** — QQ Mail, 163 Mail, 189 Mail, 139 Mail, Outlook, Gmail
-- 🔧 **Custom SMTP** — configure any SMTP server (host, port, SSL/TLS, credentials)
-- 🖱️ **Context Menu** — accessible from document tree and editor title right-click menu
+- 📧 **作为正文发 Email** — 将文档渲染为 HTML 格式发送
+- 📎 **作为附件发 Email** — 将文档导出为 `.md` 文件作为附件发送
+- ⚙️ **预置常用邮箱** — QQ 邮箱、163 邮箱、189 邮箱、139 邮箱、Outlook、Gmail
+- 🔧 **自定义 SMTP** — 支持任意 SMTP 服务器配置
+- 🖱️ **右键菜单入口** — 文档树和编辑器标题右键菜单均可访问
 
-## Requirements
+## 运行要求
 
-- SiYuan Note desktop client (Electron) — **browser mode is not supported** due to SMTP network restrictions
-- SiYuan `v2.10.14` or later
+- 思源笔记**桌面客户端**（Electron 环境）— 浏览器模式不支持，因 SMTP 网络限制
+- 思源笔记 `v2.10.14` 及以上
 
-## Setup
+## 配置步骤
 
-1. Enable the plugin from **Settings → Marketplace → Plugins**
-2. Click the ✉️ icon in the top bar, or go to plugin settings
-3. Select a preset email provider (e.g., QQ Mail) or choose **Custom**
-4. Fill in your SMTP credentials:
-   - **SMTP Host** — e.g., `smtp.qq.com`
-   - **Port** — `465` (SSL) or `587` (STARTTLS)
-   - **Username** — your full email address
-   - **Authorization Code** — QQ/163/189 use app-specific auth codes, not login passwords
-5. Save settings
+1. 在**设置 → 集市 → 插件**中启用本插件
+2. 点击顶栏的 ✉️ 图标，或进入插件设置
+3. 选择预置邮箱（如 QQ 邮箱），或选择**自定义**
+4. 填写 SMTP 信息：
+   - **SMTP 服务器** — 如 `smtp.qq.com`
+   - **端口** — `465`（SSL）或 `587`（STARTTLS）
+   - **用户名** — 填写完整邮箱地址
+   - **授权码/密码** — QQ/163/189 等需使用专用**授权码**，非登录密码
+5. 点击**保存设置**
 
-## Usage
+## 使用方法
 
-Right-click any document in the **document tree** or **editor title bar**:
+在**文档树**或**编辑器标题栏**右键点击任意文档：
 
-- **Send as Email Body** → opens a dialog to enter recipient and subject, sends HTML email
-- **Send as Attachment** → sends the document as a `.md` file attachment
+- **作为正文发 Email** → 填写收件人和主题，一键发送 HTML 邮件
+- **作为附件发 Email** → 将文档打包为 `.md` 附件发送
 
-## Common Email Provider Settings
+## 常用邮箱配置参考
 
-| Provider | Host | Port | SSL |
-|----------|------|------|-----|
-| QQ Mail | `smtp.qq.com` | 465 | ✅ |
-| 163 Mail | `smtp.163.com` | 465 | ✅ |
-| 189 Mail | `smtp.189.cn` | 465 | ✅ |
-| 139 Mail | `smtp.139.com` | 465 | ✅ |
-| Outlook | `smtp.office365.com` | 587 | ❌ (STARTTLS) |
+| 邮箱 | 服务器 | 端口 | SSL |
+|------|--------|------|-----|
+| QQ 邮箱 | `smtp.qq.com` | 465 | ✅ |
+| 163 邮箱 | `smtp.163.com` | 465 | ✅ |
+| 189 邮箱 | `smtp.189.cn` | 465 | ✅ |
+| 139 邮箱 | `smtp.139.com` | 465 | ✅ |
 | Gmail | `smtp.gmail.com` | 465 | ✅ |
 
-> **Note for QQ/163/189 users**: You must enable SMTP in your email account settings and use the **authorization code** (授权码), not your login password.
+> **QQ / 163 / 189 用户注意**：需在邮箱账号设置中开启 SMTP 服务，并使用**授权码**（非登录密码）。
 
-## License
-
-MIT

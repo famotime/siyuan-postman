@@ -17,11 +17,14 @@
     "build": "vite build"
   },
   "dependencies": {
+    "jszip": "^3.10.1",
     "nodemailer": "^6.9.9",
     "vue": "^3.3.8"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.8.1",
+    "@rollup/plugin-commonjs": "^29.0.1",
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "@types/node": "^20.2.0",
     "@types/nodemailer": "^6.4.14",
     "@vitejs/plugin-vue": "^5.2.1",

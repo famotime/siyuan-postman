@@ -4,6 +4,8 @@ import vue from "@vitejs/plugin-vue"
 import fg from "fast-glob"
 import minimist from "minimist"
 import livereload from "rollup-plugin-livereload"
+import nodeResolve from "@rollup/plugin-node-resolve"
+import commonjs from "@rollup/plugin-commonjs"
 import {
   defineConfig,
   loadEnv,
@@ -74,6 +76,11 @@ export default defineConfig(({
             src: "./src/i18n/**",
             dest: "./i18n/",
           },
+          {
+            // 将 nodemailer 随插件一起分发，在 Electron 中通过 __dirname 动态绝对路径加载
+            src: "./node_modules/nodemailer",
+            dest: "./node_modules/",
+          },
         ],
       }),
     ],
@@ -137,10 +144,13 @@ export default defineConfig(({
               ]),
         ],
 
-        // make sure to externalize deps that shouldn't be bundled
-        // into your library
-        // siyuan 和 nodemailer 均在运行时由 Electron 提供，不打包
-        external: ["siyuan", "process", "nodemailer"],
+        // siyuan 和 nodemailer 均由外部提供：siyuan 为思源内置环境；
+        // nodemailer 将在运行时通过绝对路径 require 动态加载，不进行打包。
+        external: [
+          "siyuan",
+          "process",
+          "nodemailer",
+        ],
 
         output: {
           entryFileNames: "[name].js",

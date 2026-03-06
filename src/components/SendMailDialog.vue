@@ -34,7 +34,7 @@
           </label>
           <label class="postman-radio-label">
             <input v-model="localMode" type="radio" value="attachment" class="postman-radio">
-            📎 作为附件（.md）
+            📎 作为附件（.md / .zip）
           </label>
         </div>
       </div>
