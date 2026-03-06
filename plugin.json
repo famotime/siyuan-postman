@@ -1,0 +1,32 @@
+{
+  "name": "siyuan-postman",
+  "author": "famotime",
+  "url": "https://github.com/famotime/siyuan-postman",
+  "version": "0.1.0",
+  "minAppVersion": "2.10.14",
+  "backends": [
+    "all"
+  ],
+  "frontends": [
+    "desktop"
+  ],
+  "displayName": {
+    "default": "siyuan-postman",
+    "en_US": "Postman - Send Doc as Email",
+    "zh_CN": "邮递员 - 一键发送文档邮件"
+  },
+  "description": {
+    "default": "Send SiYuan documents as email (body or attachment) via SMTP.",
+    "en_US": "Send SiYuan documents as email (body or attachment) via SMTP. Supports QQ, 163, 189, 139 and custom SMTP providers.",
+    "zh_CN": "通过 SMTP 将思源笔记文档一键发送为邮件（正文或附件），预置支持 QQ、163、189、139 等常用邮箱。"
+  },
+  "readme": {
+    "default": "README.md",
+    "en_US": "README.md",
+    "zh_CN": "README_zh_CN.md"
+  },
+  "funding": {
+    "custom": []
+  },
+  "keywords": ["email", "smtp", "mail", "export", "邮件", "发送"]
+}

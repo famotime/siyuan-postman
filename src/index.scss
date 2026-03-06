@@ -1,0 +1,13 @@
+/**
+ * siyuan-postman 全局样式
+ * 主要样式通过组件 scoped 或非 scoped style 定义
+ * 此处仅放置无法在组件中编写的全局覆盖样式
+ */
+
+/* 确保思源 Dialog 内的表单元素宽度充满容器 */
+.b3-dialog__body {
+  .postman-setting,
+  .postman-dialog {
+    padding: 0;
+  }
+}
