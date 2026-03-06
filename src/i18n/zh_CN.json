@@ -18,9 +18,7 @@
   "settingRelayHint": "凭据仅保存在当前插件数据中。",
   "settingSaveHint": "保存后再执行邮件发送，可减少投递失败。",
   "settingSecuritySslLabel": "SSL/TLS",
-  "settingSecurityStarttlsLabel": "STARTTLS",
-  "settingSecuritySslHint": "从握手开始即建立加密通道。",
-  "settingSecurityStarttlsHint": "连接成功后再升级为加密通道。",
+  "settingSecuritySslHint": "当前仅支持 SSL/TLS 加密连接。",
   "settingPasswordPlaceholder": "授权码或邮箱密码",
   "settingFromPlaceholder": "邮件中显示的发件人名称",
   "dialogTitle": "发送邮件",
@@ -51,7 +49,6 @@
   "presetNetease163": "163 邮箱",
   "presetChina189": "189 邮箱",
   "presetChina139": "139 邮箱",
-  "presetOutlook": "Outlook",
   "presetGmail": "Gmail",
   "presetCustom": "自定义",
   "topBarTitle": "邮递员"

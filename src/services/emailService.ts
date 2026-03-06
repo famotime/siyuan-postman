@@ -3,6 +3,7 @@
  * 在 Electron 环境下通过 nodemailer + SMTP 发送邮件
  * nodemailer 以静态 import 方式引入，由 Rollup + @rollup/plugin-commonjs 打包进 bundle
  */
+import { normalizeEmailConfig } from '@/composables/useEmailConfig'
 import type { EmailConfig } from '@/composables/useEmailConfig'
 import PluginInfoString from '@/../plugin.json'
 import JSZip from 'jszip'
@@ -78,6 +79,7 @@ function getWorkspacePath(relativePath: string): string {
  */
 export async function sendEmail(options: SendEmailOptions): Promise<void> {
   const { config, to, subject, mode, docTitle, htmlContent, mdContent } = options
+  const normalizedConfig = normalizeEmailConfig(config)
 
   // 非 Electron 环境（浏览器）无法使用 SMTP
   const nodemailer = requireNodeModule('nodemailer')
@@ -85,27 +87,27 @@ export async function sendEmail(options: SendEmailOptions): Promise<void> {
   const path = requireNodeModule('path')
 
   // 校验配置完整性
-  if (!config.host || !config.user || !config.password) {
+  if (!normalizedConfig.host || !normalizedConfig.user || !normalizedConfig.password) {
     throw new Error('NO_CONFIG')
   }
 
   // 创建 SMTP 传输
   const transporter = nodemailer.createTransport({
-    host: config.host,
-    port: config.port,
-    secure: config.secure, // true = SSL/TLS (465), false = STARTTLS (587)
+    host: normalizedConfig.host,
+    port: normalizedConfig.port,
+    secure: true,
     auth: {
-      user: config.user,
-      pass: config.password,
+      user: normalizedConfig.user,
+      pass: normalizedConfig.password,
     },
     // 连接超时 15 秒
     connectionTimeout: 15000,
     greetingTimeout: 10000,
   })
 
-  const fromAddress = config.fromName
-    ? `"${config.fromName}" <${config.user}>`
-    : config.user
+  const fromAddress = normalizedConfig.fromName
+    ? `"${normalizedConfig.fromName}" <${normalizedConfig.user}>`
+    : normalizedConfig.user
 
   let mailOptions: any
 

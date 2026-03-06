@@ -10,7 +10,7 @@ export interface EmailPreset {
   label: string
   host: string
   port: number
-  secure: boolean // true = SSL/TLS on port 465; false = STARTTLS on port 587
+  secure: boolean // 目前固定为 SSL/TLS
 }
 
 /** 用户 SMTP 配置类型 */
@@ -30,7 +30,6 @@ export const EMAIL_PRESETS: EmailPreset[] = [
   { key: '163', label: '163 邮箱', host: 'smtp.163.com', port: 465, secure: true },
   { key: '189', label: '189 邮箱', host: 'smtp.189.cn', port: 465, secure: true },
   { key: '139', label: '139 邮箱', host: 'smtp.139.com', port: 465, secure: true },
-  { key: 'outlook', label: 'Outlook', host: 'smtp.office365.com', port: 587, secure: false },
   { key: 'gmail', label: 'Gmail', host: 'smtp.gmail.com', port: 465, secure: true },
   { key: 'custom', label: '自定义', host: '', port: 465, secure: true },
 ]
@@ -48,8 +47,24 @@ const DEFAULT_CONFIG: EmailConfig = {
 
 const CONFIG_KEY = 'postman-smtp-config.json'
 
+const SUPPORTED_PRESET_KEYS = new Set(EMAIL_PRESETS.map(preset => preset.key))
+
+export function normalizeEmailConfig(config?: Partial<EmailConfig> | null): EmailConfig {
+  const normalizedConfig: EmailConfig = {
+    ...DEFAULT_CONFIG,
+    ...config,
+    secure: true,
+  }
+
+  if (!SUPPORTED_PRESET_KEYS.has(normalizedConfig.preset)) {
+    normalizedConfig.preset = 'custom'
+  }
+
+  return normalizedConfig
+}
+
 /** 全局配置状态（响应式）*/
-const emailConfig = ref<EmailConfig>({ ...DEFAULT_CONFIG })
+const emailConfig = ref<EmailConfig>(normalizeEmailConfig())
 
 let pluginRef: Plugin | null = null
 
@@ -69,7 +84,7 @@ export async function loadEmailConfig(): Promise<EmailConfig> {
     const data = await pluginRef.loadData(CONFIG_KEY)
     if (data && typeof data === 'object') {
       // 合并默认配置，兼容旧版本字段缺失
-      emailConfig.value = { ...DEFAULT_CONFIG, ...data }
+      emailConfig.value = normalizeEmailConfig(data as Partial<EmailConfig>)
     }
   }
   catch (e) {
@@ -83,8 +98,9 @@ export async function loadEmailConfig(): Promise<EmailConfig> {
  */
 export async function saveEmailConfig(config: EmailConfig): Promise<void> {
   if (!pluginRef) return
-  emailConfig.value = { ...config }
-  await pluginRef.saveData(CONFIG_KEY, config)
+  const normalizedConfig = normalizeEmailConfig(config)
+  emailConfig.value = normalizedConfig
+  await pluginRef.saveData(CONFIG_KEY, normalizedConfig)
 }
 
 /**
