@@ -57,9 +57,9 @@ export default class PostmanPlugin extends Plugin {
 
   openSetting() {
     const dialog = new Dialog({
-      title: '邮递员设置',
+      title: this.t.settingTitle || '邮递员设置',
       content: '<div id="postman-setting-mount"></div>',
-      width: '640px',
+      width: '720px',
     })
 
     const mountEl = dialog.element.querySelector('#postman-setting-mount')
@@ -139,7 +139,7 @@ export default class PostmanPlugin extends Plugin {
     const dialog = new Dialog({
       title: this.t.dialogTitle || '发送邮件',
       content: '<div id="postman-send-mount"></div>',
-      width: '580px',
+      width: '640px',
     })
 
     const mountEl = dialog.element.querySelector('#postman-send-mount')

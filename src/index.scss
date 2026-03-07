@@ -1,210 +1,149 @@
-﻿.b3-dialog__body {
+.b3-dialog__body {
   .postman-setting,
   .postman-dialog {
     padding: 0;
+    background: transparent;
   }
 }
 
 .postman-setting,
 .postman-dialog {
-  --pm-accent-red: #da6a55;
-  --pm-accent-blue: #476fe0;
-  --pm-paper: color-mix(in srgb, var(--b3-theme-background) 90%, white 10%);
-  --pm-panel: color-mix(in srgb, var(--b3-theme-surface) 84%, var(--b3-theme-background) 16%);
-  --pm-panel-strong: color-mix(in srgb, var(--b3-theme-background) 74%, white 26%);
-  --pm-border: color-mix(in srgb, var(--b3-border-color) 82%, var(--b3-theme-on-surface) 8%);
+  --pm-accent: var(--b3-theme-primary, #4c6fff);
+  --pm-success: var(--b3-theme-success, #2f9d62);
+  --pm-danger: var(--b3-theme-error, #d46464);
+  --pm-surface: color-mix(in srgb, var(--b3-theme-surface) 84%, var(--b3-theme-background) 16%);
+  --pm-surface-elevated: color-mix(in srgb, var(--b3-theme-background) 88%, var(--b3-theme-surface) 12%);
+  --pm-surface-muted: color-mix(in srgb, var(--b3-theme-background) 76%, var(--b3-theme-surface) 24%);
+  --pm-border: color-mix(in srgb, var(--b3-border-color) 88%, var(--b3-theme-on-surface) 6%);
+  --pm-border-strong: color-mix(in srgb, var(--pm-accent) 18%, var(--pm-border) 82%);
+  --pm-field-bg: color-mix(in srgb, var(--b3-theme-background) 92%, var(--pm-surface) 8%);
   --pm-text: var(--b3-theme-on-background);
-  --pm-muted: color-mix(in srgb, var(--b3-theme-on-surface) 58%, transparent);
-  --pm-shadow: 0 24px 44px color-mix(in srgb, black 10%, transparent), 0 8px 20px color-mix(in srgb, black 6%, transparent);
-  --pm-shadow-soft: 0 14px 28px color-mix(in srgb, black 8%, transparent);
-  --pm-radius-xl: 24px;
-  --pm-radius-lg: 18px;
-  --pm-radius-md: 14px;
-  --pm-serif: 'Iowan Old Style', 'Palatino Linotype', 'Noto Serif SC', 'Songti SC', serif;
+  --pm-text-secondary: color-mix(in srgb, var(--b3-theme-on-background) 72%, transparent);
+  --pm-text-muted: color-mix(in srgb, var(--b3-theme-on-background) 56%, transparent);
+  --pm-shadow-soft: 0 10px 24px color-mix(in srgb, black 8%, transparent);
+  --pm-radius-xl: 20px;
+  --pm-radius-lg: 16px;
+  --pm-radius-md: 12px;
   --pm-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei', 'Segoe UI', sans-serif;
-  --pm-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei', monospace;
 
-  position: relative;
   color: var(--pm-text);
+  font-family: var(--pm-sans);
 }
 
-.postman-shell {
-  position: relative;
-  overflow: hidden;
-  padding: 22px;
+.postman-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
   border-radius: var(--pm-radius-xl);
   border: 1px solid var(--pm-border);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--pm-paper) 96%, white 4%), var(--pm-paper)),
-    var(--pm-paper);
-  box-shadow: var(--pm-shadow);
-
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 8px;
-    background: repeating-linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--pm-accent-red) 80%, transparent) 0 20px,
-      transparent 20px 28px,
-      color-mix(in srgb, var(--pm-accent-blue) 84%, transparent) 28px 48px,
-      transparent 48px 56px
-    );
-    opacity: 0.88;
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background:
-      radial-gradient(circle at top left, color-mix(in srgb, var(--pm-accent-blue) 10%, transparent), transparent 34%),
-      radial-gradient(circle at bottom right, color-mix(in srgb, var(--pm-accent-red) 10%, transparent), transparent 30%);
-  }
+  background: var(--pm-surface);
+  box-shadow: var(--pm-shadow-soft);
 }
 
-.postman-shell__hero {
-  position: relative;
-  overflow: hidden;
-  padding: 22px 24px 20px;
-  border-radius: calc(var(--pm-radius-xl) - 4px);
-  border: 1px solid color-mix(in srgb, var(--pm-accent-blue) 18%, var(--pm-border) 82%);
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--pm-panel-strong) 92%, white 8%), color-mix(in srgb, var(--pm-panel) 96%, transparent)),
-    linear-gradient(180deg, color-mix(in srgb, var(--pm-accent-blue) 7%, transparent), transparent 58%),
-    var(--pm-panel);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 52%, transparent);
-
-  &::after {
-    content: '';
-    position: absolute;
-    right: -30px;
-    bottom: -34px;
-    width: 152px;
-    height: 152px;
-    border-radius: 50%;
-    border: 1px dashed color-mix(in srgb, var(--pm-accent-red) 18%, transparent);
-    opacity: 0.5;
-  }
-
-  &--compact {
-    padding: 20px 22px 18px;
-  }
-}
-
-.postman-shell__stamp {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 82px;
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px dashed color-mix(in srgb, var(--pm-accent-red) 45%, transparent);
-  border-radius: 999px;
-  color: color-mix(in srgb, var(--pm-accent-red) 74%, var(--pm-text) 26%);
-  font-family: var(--pm-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  transform: rotate(7deg);
-  background: color-mix(in srgb, var(--pm-accent-red) 8%, transparent);
-}
-
-.postman-shell__eyebrow {
-  margin: 0 0 10px;
-  font-family: var(--pm-sans);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--pm-accent-blue) 72%, var(--pm-text) 28%);
-}
-
-.postman-shell__title {
-  margin: 0;
-  padding-right: 92px;
-  font-family: var(--pm-serif);
-  font-size: 29px;
-  line-height: 1.12;
-  letter-spacing: 0.01em;
-  color: var(--pm-text);
-}
-
-.postman-shell__subtitle {
-  margin: 12px 0 0;
-  max-width: 520px;
-  font-size: 14px;
-  line-height: 1.7;
-  color: var(--pm-muted);
-}
-
-.postman-shell__route {
+.postman-panel-header {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 18px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+
+  &__main {
+    min-width: 0;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.25;
+    font-weight: 700;
+    color: var(--pm-text);
+  }
+
+  &__subtitle {
+    margin: 8px 0 0;
+    max-width: 560px;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--pm-text-secondary);
+  }
 }
 
-.postman-shell__route-stop,
-.postman-chip {
+.postman-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 30px;
+  min-height: 32px;
   padding: 0 12px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--pm-accent-blue) 12%, var(--pm-border) 88%);
-  background: color-mix(in srgb, var(--pm-panel) 82%, white 18%);
-  font-family: var(--pm-sans);
-  font-size: 11px;
+  border: 1px solid var(--pm-border-strong);
+  background: color-mix(in srgb, var(--pm-accent) 8%, var(--pm-surface-elevated) 92%);
+  color: color-mix(in srgb, var(--pm-accent) 76%, var(--pm-text) 24%);
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--pm-text);
+
+  &--warning {
+    border-color: color-mix(in srgb, var(--pm-danger) 22%, var(--pm-border) 78%);
+    background: color-mix(in srgb, var(--pm-danger) 8%, var(--pm-surface-elevated) 92%);
+    color: color-mix(in srgb, var(--pm-danger) 82%, var(--pm-text) 18%);
+  }
 }
 
-.postman-chip--accent {
-  border-color: color-mix(in srgb, var(--pm-accent-red) 18%, var(--pm-border) 82%);
-  background: color-mix(in srgb, var(--pm-accent-red) 9%, transparent);
-  color: color-mix(in srgb, var(--pm-accent-red) 72%, var(--pm-text) 28%);
+.postman-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
 }
 
-.postman-shell__route-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--pm-accent-red) 70%, transparent);
+.postman-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 100px;
+  padding: 14px 16px;
+  border-radius: var(--pm-radius-lg);
+  border: 1px solid var(--pm-border);
+  background: var(--pm-surface-elevated);
+
+  &--wide {
+    grid-column: span 2;
+  }
+
+  &--warning {
+    border-color: color-mix(in srgb, var(--pm-danger) 24%, var(--pm-border) 76%);
+    background: color-mix(in srgb, var(--pm-danger) 7%, var(--pm-surface-elevated) 93%);
+  }
+
+  &__label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--pm-text-muted);
+    text-transform: uppercase;
+  }
+
+  &__value {
+    font-size: 16px;
+    line-height: 1.4;
+    font-weight: 700;
+    color: var(--pm-text);
+
+    &--wrap {
+      word-break: break-word;
+    }
+  }
+
+  &__hint {
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--pm-text-secondary);
+  }
 }
 
 .postman-card {
-  position: relative;
   padding: 18px;
   border-radius: var(--pm-radius-lg);
   border: 1px solid var(--pm-border);
-  background: color-mix(in srgb, var(--pm-panel) 92%, white 8%);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 48%, transparent);
-
-  &--striped::before {
-    content: '';
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 4px;
-    border-radius: 999px;
-    background: linear-gradient(180deg, var(--pm-accent-blue), var(--pm-accent-red));
-  }
-
-  &--soft {
-    background:
-      linear-gradient(180deg, color-mix(in srgb, var(--pm-accent-blue) 6%, transparent), transparent 68%),
-      color-mix(in srgb, var(--pm-panel) 90%, white 10%);
-  }
+  background: var(--pm-surface-elevated);
 
   &__head {
     display: flex;
@@ -213,31 +152,21 @@
     gap: 16px;
     margin-bottom: 16px;
   }
-  &__eyebrow {
-    margin: 0 0 6px;
-    font-family: var(--pm-sans);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: color-mix(in srgb, var(--pm-accent-blue) 70%, var(--pm-text) 30%);
-  }
 
   &__title {
     margin: 0;
-    font-family: var(--pm-serif);
-    font-size: 19px;
-    line-height: 1.25;
+    font-size: 18px;
+    line-height: 1.35;
     color: var(--pm-text);
   }
 
   &__hint {
     margin: 0;
-    max-width: 280px;
+    max-width: 300px;
     font-size: 12px;
     line-height: 1.6;
-    color: var(--pm-muted);
     text-align: right;
+    color: var(--pm-text-secondary);
   }
 }
 
@@ -254,25 +183,22 @@
   }
 
   &__label {
-    font-family: var(--pm-sans);
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
+    color: var(--pm-text-muted);
     text-transform: uppercase;
-    color: var(--pm-muted);
+  }
+
+  &__hint,
+  &__tip {
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--pm-text-secondary);
   }
 
   &__hint {
-    font-size: 12px;
-    line-height: 1.5;
-    color: var(--pm-muted);
     text-align: right;
-  }
-
-  &__tip {
-    font-size: 12px;
-    line-height: 1.6;
-    color: var(--pm-muted);
   }
 }
 
@@ -284,10 +210,10 @@
     content: '⌄';
     position: absolute;
     top: 50%;
-    right: 16px;
+    right: 14px;
     transform: translateY(-50%);
     font-size: 12px;
-    color: var(--pm-muted);
+    color: var(--pm-text-muted);
     pointer-events: none;
   }
 }
@@ -298,75 +224,31 @@
   box-sizing: border-box;
   padding: 0 14px;
   border-radius: var(--pm-radius-md);
-  border: 1px solid color-mix(in srgb, var(--pm-accent-blue) 10%, var(--pm-border) 90%);
-  background: color-mix(in srgb, var(--b3-theme-background) 82%, white 18%);
+  border: 1px solid var(--pm-border);
+  background: var(--pm-field-bg);
   color: var(--pm-text);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 46%, transparent);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+
+  &::placeholder {
+    color: var(--pm-text-muted);
+  }
 
   &:hover {
-    border-color: color-mix(in srgb, var(--pm-accent-blue) 22%, var(--pm-border) 78%);
+    border-color: var(--pm-border-strong);
   }
 
   &:focus,
   &:focus-visible {
     outline: none;
-    border-color: color-mix(in srgb, var(--pm-accent-blue) 42%, var(--pm-border) 58%);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--pm-accent-blue) 14%, transparent);
-    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--pm-accent) 46%, var(--pm-border) 54%);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--pm-accent) 14%, transparent);
+    background: color-mix(in srgb, var(--pm-field-bg) 92%, white 8%);
   }
 }
 
 .postman-select-wrap > .postman-control {
   appearance: none;
-  padding-right: 36px;
-}
-
-.postman-switch {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
-
-  &__input {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-
-    &:checked + .postman-switch__track {
-      background: linear-gradient(90deg, var(--pm-accent-blue), color-mix(in srgb, var(--pm-accent-red) 70%, var(--pm-accent-blue) 30%));
-      border-color: transparent;
-    }
-
-    &:checked + .postman-switch__track::after {
-      transform: translateX(20px);
-    }
-  }
-
-  &__track {
-    position: relative;
-    width: 44px;
-    height: 24px;
-    border-radius: 999px;
-    border: 1px solid var(--pm-border);
-    background: color-mix(in srgb, var(--b3-theme-background) 76%, white 24%);
-    box-shadow: inset 0 1px 3px color-mix(in srgb, black 10%, transparent);
-    transition: background 0.18s ease, border-color 0.18s ease;
-
-    &::after {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: #fff;
-      box-shadow: 0 2px 5px color-mix(in srgb, black 18%, transparent);
-      transition: transform 0.18s ease;
-    }
-  }
+  padding-right: 34px;
 }
 
 .postman-status {
@@ -378,18 +260,17 @@
   border: 1px solid transparent;
   font-size: 13px;
   line-height: 1.5;
-  animation: postman-slide-fade 0.22s ease;
 
   &--success {
-    border-color: color-mix(in srgb, var(--b3-theme-success) 24%, transparent);
-    background: color-mix(in srgb, var(--b3-theme-success-lighten) 88%, white 12%);
-    color: var(--b3-theme-success);
+    border-color: color-mix(in srgb, var(--pm-success) 24%, transparent);
+    background: color-mix(in srgb, var(--pm-success) 8%, var(--pm-surface-elevated) 92%);
+    color: var(--pm-success);
   }
 
   &--error {
-    border-color: color-mix(in srgb, var(--b3-theme-error) 24%, transparent);
-    background: color-mix(in srgb, var(--b3-theme-error-lighten) 90%, white 10%);
-    color: var(--b3-theme-error);
+    border-color: color-mix(in srgb, var(--pm-danger) 24%, transparent);
+    background: color-mix(in srgb, var(--pm-danger) 8%, var(--pm-surface-elevated) 92%);
+    color: var(--pm-danger);
   }
 
   &__dot {
@@ -401,6 +282,28 @@
   }
 }
 
+.postman-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  &__copy {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  &__hint {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--pm-text-secondary);
+  }
+}
+
 .postman-btn {
   display: inline-flex;
   align-items: center;
@@ -409,12 +312,9 @@
   min-height: 46px;
   padding: 0 18px;
   border-radius: 999px;
-  font-family: var(--pm-sans);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease, opacity 0.18s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
   cursor: pointer;
 
   &:disabled {
@@ -430,40 +330,33 @@
 
   &--ghost {
     border: 1px solid var(--pm-border);
-    background: color-mix(in srgb, var(--pm-panel) 82%, white 18%);
+    background: var(--pm-surface-elevated);
     color: var(--pm-text);
 
     &:hover:not(:disabled) {
       transform: translateY(-1px);
+      border-color: var(--pm-border-strong);
       box-shadow: var(--pm-shadow-soft);
     }
   }
 
   &--primary {
     border: none;
+    background: var(--pm-accent);
     color: #fff;
-    background: linear-gradient(135deg, var(--pm-accent-blue), color-mix(in srgb, var(--pm-accent-red) 62%, var(--pm-accent-blue) 38%));
-    box-shadow: 0 14px 24px color-mix(in srgb, var(--pm-accent-blue) 18%, transparent);
+    box-shadow: 0 10px 22px color-mix(in srgb, var(--pm-accent) 20%, transparent);
 
     &:hover:not(:disabled) {
-      filter: brightness(1.03);
-      transform: translateY(-2px);
-      box-shadow: 0 18px 28px color-mix(in srgb, var(--pm-accent-blue) 22%, transparent);
-    }
-
-    &:active:not(:disabled) {
-      transform: translateY(0);
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px color-mix(in srgb, var(--pm-accent) 24%, transparent);
     }
   }
 }
 
 .postman-btn__label {
   white-space: nowrap;
-  font-family: var(--pm-sans);
   font-size: 14px;
   font-weight: 700;
-  letter-spacing: normal;
-  text-transform: none;
 }
 
 .postman-spinner {
@@ -482,42 +375,25 @@
   }
 }
 
-@keyframes postman-slide-fade {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @media (max-width: 720px) {
-  .postman-shell {
+  .postman-panel {
     padding: 16px;
   }
 
-  .postman-shell__hero {
-    padding: 18px 18px 16px;
-  }
-
-  .postman-shell__title {
-    padding-right: 0;
-    font-size: 24px;
-  }
-
-  .postman-shell__stamp {
-    position: static;
-    margin-bottom: 12px;
-    transform: none;
-  }
-
+  .postman-panel-header,
   .postman-card__head,
-  .postman-field__header {
+  .postman-field__header,
+  .postman-actions {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+  }
+
+  .postman-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .postman-summary-card--wide {
+    grid-column: span 1;
   }
 
   .postman-card__hint,
@@ -526,7 +402,3 @@
     text-align: left;
   }
 }
-
-
-
-

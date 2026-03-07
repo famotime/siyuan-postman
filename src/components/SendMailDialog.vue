@@ -1,25 +1,41 @@
-﻿<template>
-  <section class="postman-dialog postman-shell">
-    <header class="postman-shell__hero postman-shell__hero--compact">
-      <span class="postman-shell__stamp">AIR MAIL</span>
-      <p class="postman-shell__eyebrow">{{ t('dialogEyebrow', 'Delivery Sheet') }}</p>
-      <h3 class="postman-shell__title">{{ i18n.dialogTitle }}</h3>
-      <p class="postman-shell__subtitle">{{ t('dialogSubtitle', 'Confirm recipients and choose how this document leaves SiYuan.') }}</p>
-
-      <div class="postman-doc-chip">
-        <div class="postman-doc-chip__copy">
-          <span class="postman-doc-chip__label">{{ t('dialogDocLabel', 'Current document') }}</span>
-          <strong class="postman-doc-chip__value">{{ docTitle }}</strong>
-        </div>
-        <span class="postman-chip postman-chip--accent">{{ currentModeCard.tag }}</span>
+<template>
+  <section class="postman-dialog postman-panel">
+    <header class="postman-panel-header">
+      <div class="postman-panel-header__main">
+        <h3 class="postman-panel-header__title">{{ i18n.dialogTitle }}</h3>
+        <p class="postman-panel-header__subtitle">{{ t('dialogSubtitle', '填写收件人并选择发送方式。') }}</p>
       </div>
+
+      <span class="postman-badge" :class="{ 'postman-badge--warning': !configReady }">
+        {{ configReady ? t('dialogRelayReady', '已就绪') : t('dialogRelayMissing', '需要配置') }}
+      </span>
     </header>
+
+    <div class="postman-summary-grid">
+      <article class="postman-summary-card postman-summary-card--wide">
+        <span class="postman-summary-card__label">{{ t('dialogDocLabel', '当前文档') }}</span>
+        <strong class="postman-summary-card__value postman-summary-card__value--wrap">{{ docTitle }}</strong>
+        <span class="postman-summary-card__hint">{{ t('dialogSubjectHint', '默认使用当前文档标题。') }}</span>
+      </article>
+
+      <article class="postman-summary-card">
+        <span class="postman-summary-card__label">{{ t('dialogModeLabel', '发送方式') }}</span>
+        <strong class="postman-summary-card__value">{{ currentModeCard.title }}</strong>
+        <span class="postman-summary-card__hint">{{ currentModeCard.desc }}</span>
+      </article>
+
+      <article class="postman-summary-card" :class="{ 'postman-summary-card--warning': !configReady }">
+        <span class="postman-summary-card__label">{{ t('dialogRelayLabel', 'SMTP 状态') }}</span>
+        <strong class="postman-summary-card__value">{{ configReady ? t('dialogRelayReady', '已就绪') : t('dialogRelayMissing', '需要配置') }}</strong>
+        <span class="postman-summary-card__hint">{{ configReady ? relaySummary : t('dialogReadyHint', '发送前请先确认 SMTP 设置完整。') }}</span>
+      </article>
+    </div>
 
     <div class="postman-dialog__form">
       <label class="postman-field">
         <span class="postman-field__header">
           <span class="postman-field__label">{{ i18n.dialogTo }}</span>
-          <span class="postman-field__hint">{{ t('dialogRecipientsHint', 'Use commas or spaces between multiple addresses.') }}</span>
+          <span class="postman-field__hint">{{ t('dialogRecipientsHint', '多个地址可用逗号或空格分隔。') }}</span>
         </span>
         <input
           v-model="toInput"
@@ -33,18 +49,17 @@
       <label class="postman-field">
         <span class="postman-field__header">
           <span class="postman-field__label">{{ i18n.dialogSubject }}</span>
-          <span class="postman-field__hint">{{ t('dialogSubjectHint', 'Defaults to the document title.') }}</span>
+          <span class="postman-field__hint">{{ t('dialogSubjectHint', '默认使用当前文档标题。') }}</span>
         </span>
         <input v-model="subject" class="b3-text-field postman-control" type="text">
       </label>
 
-      <section class="postman-card postman-card--soft">
+      <section class="postman-card">
         <div class="postman-card__head">
           <div>
-            <p class="postman-card__eyebrow">Dispatch</p>
-            <h4 class="postman-card__title">{{ t('dialogModeLabel', 'Send mode') }}</h4>
+            <h4 class="postman-card__title">{{ t('dialogModeLabel', '发送方式') }}</h4>
           </div>
-          <p class="postman-card__hint">{{ t('dialogSendHint', 'Body mode sends rendered HTML. Attachment mode exports Markdown or ZIP assets.') }}</p>
+          <p class="postman-card__hint">{{ t('dialogSendHint', '正文模式发送渲染后的 HTML，附件模式导出 Markdown 或 ZIP。') }}</p>
         </div>
 
         <div class="postman-mode-grid">
@@ -55,21 +70,23 @@
             :class="{ 'postman-mode-card--active': localMode === option.value }"
           >
             <input v-model="localMode" type="radio" :value="option.value" class="postman-radio">
-            <span class="postman-mode-card__tag">{{ option.tag }}</span>
+            <span class="postman-mode-card__check" />
             <strong class="postman-mode-card__title">{{ option.title }}</strong>
             <span class="postman-mode-card__desc">{{ option.desc }}</span>
           </label>
         </div>
       </section>
-
-      <div v-if="statusMsg" :class="['postman-status', statusType === 'error' ? 'postman-status--error' : 'postman-status--success']">
-        <span class="postman-status__dot" />
-        <span>{{ statusMsg }}</span>
-      </div>
     </div>
 
-    <footer class="postman-dialog__actions">
-      <p class="postman-dialog__hint">{{ t('dialogReadyHint', 'SMTP settings are required before delivery.') }}</p>
+    <footer class="postman-actions postman-dialog__actions">
+      <div class="postman-actions__copy">
+        <p class="postman-actions__hint">{{ configReady ? relaySummary : t('dialogReadyHint', '发送前请先确认 SMTP 设置完整。') }}</p>
+
+        <div v-if="statusMsg" :class="['postman-status', statusType === 'error' ? 'postman-status--error' : 'postman-status--success']">
+          <span class="postman-status__dot" />
+          <span>{{ statusMsg }}</span>
+        </div>
+      </div>
 
       <div class="postman-dialog__actions-group">
         <button
@@ -124,20 +141,33 @@ const t = (key: string, fallback: string) => props.i18n[key] || fallback
 const modeOptions = computed(() => ([
   {
     value: 'body' as SendMode,
-    tag: 'HTML',
-    title: t('dialogModeBodyTitle', props.i18n.sendAsBody || 'Inline body'),
-    desc: t('dialogModeBodyDesc', 'Best for readable HTML mail with embedded images.'),
+    title: t('dialogModeBodyTitle', props.i18n.sendAsBody || '正文发送'),
+    desc: t('dialogModeBodyDesc', '适合直接阅读的 HTML 邮件正文。'),
   },
   {
     value: 'attachment' as SendMode,
-    tag: 'ZIP / MD',
-    title: t('dialogModeAttachmentTitle', props.i18n.sendAsAttachment || 'Attachment bundle'),
-    desc: t('dialogModeAttachmentDesc', 'Exports Markdown or ZIP assets for archival delivery.'),
+    title: t('dialogModeAttachmentTitle', props.i18n.sendAsAttachment || '附件发送'),
+    desc: t('dialogModeAttachmentDesc', '导出 Markdown 或带图片资源的 ZIP 文件。'),
   },
 ]))
 
 const currentModeCard = computed(() => {
   return modeOptions.value.find(option => option.value === localMode.value) || modeOptions.value[0]
+})
+
+const configReady = computed(() => {
+  const config = emailConfig.value
+  return Boolean(config.host && config.user && config.password)
+})
+
+const relaySummary = computed(() => {
+  const config = emailConfig.value
+
+  if (!config.host) {
+    return t('dialogReadyHint', '发送前请先确认 SMTP 设置完整。')
+  }
+
+  return `${config.host}:${config.port} · SSL/TLS`
 })
 
 const canSend = computed(() => toInput.value.trim().length > 0)
@@ -217,10 +247,10 @@ async function handleSend() {
 
 <style lang="scss">
 .postman-dialog {
-  min-width: 520px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 
   &__form {
     display: flex;
@@ -228,61 +258,10 @@ async function handleSend() {
     gap: 16px;
   }
 
-  &__actions {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-  }
-
   &__actions-group {
     display: flex;
     gap: 12px;
     flex-shrink: 0;
-  }
-
-  &__hint {
-    margin: 0;
-    max-width: 280px;
-    font-size: 12px;
-    line-height: 1.5;
-    color: var(--pm-muted);
-  }
-}
-
-.postman-doc-chip {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: 18px;
-  padding: 14px 16px;
-  border-radius: var(--pm-radius-lg);
-  border: 1px solid color-mix(in srgb, var(--pm-accent-red) 14%, var(--pm-border) 86%);
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--pm-accent-red) 7%, transparent), transparent 62%),
-    color-mix(in srgb, var(--pm-panel) 90%, white 10%);
-
-  &__copy {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 0;
-  }
-
-  &__label {
-    font-size: 11px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--pm-muted);
-  }
-
-  &__value {
-    font-family: var(--pm-serif);
-    font-size: 17px;
-    line-height: 1.3;
-    color: var(--pm-text);
-    word-break: break-word;
   }
 }
 
@@ -296,53 +275,49 @@ async function handleSend() {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-height: 148px;
+  gap: 10px;
+  min-height: 136px;
   padding: 16px;
   border-radius: var(--pm-radius-lg);
   border: 1px solid var(--pm-border);
-  background: color-mix(in srgb, var(--pm-panel) 88%, white 12%);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 42%, transparent);
+  background: var(--pm-surface-elevated);
   cursor: pointer;
-  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 
   &:hover {
-    transform: translateY(-2px);
-    border-color: color-mix(in srgb, var(--pm-accent-blue) 22%, var(--pm-border) 78%);
+    transform: translateY(-1px);
+    border-color: var(--pm-border-strong);
     box-shadow: var(--pm-shadow-soft);
   }
 
   &--active {
-    border-color: color-mix(in srgb, var(--pm-accent-blue) 36%, var(--pm-border) 64%);
-    background:
-      linear-gradient(180deg, color-mix(in srgb, var(--pm-accent-blue) 10%, transparent), transparent 62%),
-      color-mix(in srgb, var(--pm-panel) 84%, white 16%);
-    box-shadow: 0 14px 24px color-mix(in srgb, var(--pm-accent-blue) 12%, transparent);
+    border-color: color-mix(in srgb, var(--pm-accent) 42%, var(--pm-border) 58%);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--pm-accent) 12%, transparent);
   }
 
-  &__tag {
-    align-self: flex-start;
-    padding: 4px 9px;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--pm-accent-red) 10%, transparent);
-    color: color-mix(in srgb, var(--pm-accent-red) 72%, var(--pm-text) 28%);
-    font-family: var(--pm-mono);
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+  &__check {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid color-mix(in srgb, var(--pm-accent) 24%, var(--pm-border) 76%);
+    background: var(--pm-surface);
+  }
+
+  &--active &__check {
+    border-color: var(--pm-accent);
+    box-shadow: inset 0 0 0 4px var(--pm-surface), 0 0 0 8px color-mix(in srgb, var(--pm-accent) 96%, transparent);
   }
 
   &__title {
-    font-family: var(--pm-serif);
-    font-size: 18px;
-    line-height: 1.25;
+    font-size: 16px;
+    line-height: 1.35;
     color: var(--pm-text);
   }
 
   &__desc {
     font-size: 13px;
     line-height: 1.6;
-    color: var(--pm-muted);
+    color: var(--pm-text-secondary);
   }
 }
 
@@ -354,13 +329,6 @@ async function handleSend() {
 
 @media (max-width: 720px) {
   .postman-dialog {
-    min-width: 0;
-
-    &__actions {
-      flex-direction: column;
-      align-items: stretch;
-    }
-
     &__actions-group {
       width: 100%;
     }
@@ -368,21 +336,10 @@ async function handleSend() {
     &__actions-group > .postman-btn {
       flex: 1;
     }
-
-    &__hint {
-      max-width: none;
-    }
   }
 
-  .postman-doc-chip,
   .postman-mode-grid {
     grid-template-columns: 1fr;
   }
-
-  .postman-doc-chip {
-    flex-direction: column;
-    align-items: flex-start;
-  }
 }
 </style>
-
