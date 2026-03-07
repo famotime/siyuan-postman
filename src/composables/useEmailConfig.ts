@@ -23,6 +23,7 @@ export interface EmailConfig {
   password: string
   fromName: string
   lastTo: string
+  hasSentSuccessfully: boolean
 }
 
 /** 预置邮箱列表 */
@@ -45,6 +46,7 @@ const DEFAULT_CONFIG: EmailConfig = {
   password: '',
   fromName: '',
   lastTo: '',
+  hasSentSuccessfully: false,
 }
 
 const CONFIG_KEY = 'postman-smtp-config.json'
@@ -57,6 +59,7 @@ export function normalizeEmailConfig(config?: Partial<EmailConfig> | null): Emai
     ...config,
     secure: true,
     lastTo: typeof config?.lastTo === 'string' ? config.lastTo : DEFAULT_CONFIG.lastTo,
+    hasSentSuccessfully: Boolean(config?.hasSentSuccessfully),
   }
 
   if (!SUPPORTED_PRESET_KEYS.has(normalizedConfig.preset)) {

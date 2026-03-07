@@ -200,6 +200,7 @@ async function handleSend() {
       await saveEmailConfig({
         ...config,
         lastTo: lastToValue,
+        hasSentSuccessfully: true,
       })
     }
     catch (saveError) {

@@ -12,6 +12,8 @@
   "settingSaveSuccess": "设置已保存",
   "settingRelayHint": "邮箱信息仅保存在本地插件数据中，不会上传。",
   "settingPasswordPlaceholder": "授权码或邮箱密码",
+  "settingShowPassword": "显示密码",
+  "settingHidePassword": "隐藏密码",
   "settingFromPlaceholder": "邮件中显示的发件人名称",
   "dialogTitle": "发送邮件",
   "dialogTo": "收件人",
@@ -35,5 +37,6 @@
   "presetChina139": "139 邮箱",
   "presetGmail": "Gmail",
   "presetCustom": "自定义",
-  "topBarTitle": "邮递员"
+  "topBarTitle": "邮递员",
+  "topBarNeedDoc": "请先打开一个文档后再发送邮件"
 }

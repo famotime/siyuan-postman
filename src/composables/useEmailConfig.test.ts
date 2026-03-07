@@ -28,6 +28,7 @@ test('loadEmailConfig normalizes legacy STARTTLS configs to SSL/TLS', async () =
   assert.equal(config.secure, true)
   assert.equal(config.preset, 'custom')
   assert.equal(config.lastTo, '')
+  assert.equal(config.hasSentSuccessfully, false)
 })
 
 test('normalizeEmailConfig keeps last recipient when provided', () => {
@@ -36,8 +37,10 @@ test('normalizeEmailConfig keeps last recipient when provided', () => {
     user: 'demo@example.com',
     password: 'secret',
     lastTo: 'a@example.com, b@example.com',
+    hasSentSuccessfully: true,
   })
 
   assert.equal(config.lastTo, 'a@example.com, b@example.com')
+  assert.equal(config.hasSentSuccessfully, true)
   assert.equal(config.secure, true)
 })

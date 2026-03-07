@@ -12,6 +12,8 @@
   "settingSaveSuccess": "Settings saved",
   "settingRelayHint": "Credentials are stored only in this plugin on the current device.",
   "settingPasswordPlaceholder": "Authorization code or password",
+  "settingShowPassword": "Show password",
+  "settingHidePassword": "Hide password",
   "settingFromPlaceholder": "Display name shown in the From field",
   "dialogTitle": "Send Email",
   "dialogTo": "Recipient",
@@ -35,5 +37,6 @@
   "presetChina139": "139 Mail",
   "presetGmail": "Gmail",
   "presetCustom": "Custom",
-  "topBarTitle": "Postman"
+  "topBarTitle": "Postman",
+  "topBarNeedDoc": "Please open a document before sending email"
 }

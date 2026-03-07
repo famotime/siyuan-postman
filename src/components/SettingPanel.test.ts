@@ -50,3 +50,14 @@ test('shared styles define design tokens and form primitives', () => {
   assert.notEqual(source.indexOf('.postman-actions'), -1)
   assert.notEqual(source.indexOf('&::placeholder'), -1)
 })
+
+test('password field provides eye toggle for visibility', () => {
+  const source = readFileSync(new URL('./SettingPanel.vue', import.meta.url), 'utf8')
+
+  assert.notEqual(source.indexOf('const showPassword = ref(false)'), -1)
+  assert.notEqual(source.indexOf(":type=\"showPassword ? 'text' : 'password'\""), -1)
+  assert.notEqual(source.indexOf('class="postman-password-toggle"'), -1)
+  assert.notEqual(source.indexOf("@click=\"showPassword = !showPassword\""), -1)
+  assert.notEqual(source.indexOf('settingShowPassword'), -1)
+  assert.notEqual(source.indexOf('settingHidePassword'), -1)
+})

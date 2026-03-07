@@ -16,7 +16,7 @@ test('dialog uses last successful recipients as default and persists them on suc
   assert.match(source, /const\s+toInput\s*=\s*ref\(emailConfig\.value\.lastTo\s*\|\|\s*''\)/)
   assert.match(source, /watch\(\(\)\s*=>\s*emailConfig\.value\.lastTo,\s*\(value\)\s*=>\s*\{/)
   assert.match(source, /const\s+lastToValue\s*=\s*toList\.join\(', '\)/)
-  assert.match(source, /await\s+saveEmailConfig\(\{\s*\.\.\.config,\s*lastTo:\s*lastToValue,\s*\}\)/)
+  assert.match(source, /await\s+saveEmailConfig\(\{\s*\.\.\.config,\s*lastTo:\s*lastToValue,\s*hasSentSuccessfully:\s*true,\s*\}\)/)
 })
 
 test('dialog parses recipients with both Chinese and English commas', () => {
