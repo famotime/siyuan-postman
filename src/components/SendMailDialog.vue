@@ -21,6 +21,20 @@
         >
       </label>
 
+      <div class="postman-provider-badge">
+        <span class="postman-provider-badge__icon-shell">
+          <img
+            :src="providerBadge.iconSrc"
+            :alt="providerBadge.label"
+            class="postman-provider-badge__icon"
+          >
+        </span>
+        <span class="postman-provider-badge__content">
+          <strong class="postman-provider-badge__label">{{ providerBadge.label }}</strong>
+          <span class="postman-provider-badge__secondary">{{ providerBadge.secondary }}</span>
+        </span>
+      </div>
+
       <div class="postman-field">
         <span class="postman-field__label">{{ t('dialogModeLabel', '发送方式') }}</span>
         <div class="postman-mode-grid">
@@ -89,11 +103,13 @@
 </template>
 
 <script setup lang="ts">
-import type { SendMode } from '@/services/emailService'
+import { EMAIL_PRESET_ICONS } from '@/assets/preset-icons'
 import { saveEmailConfig, useEmailConfig } from '@/composables/useEmailConfig'
+import type { SendMode } from '@/services/emailService'
 import { sendEmail } from '@/services/emailService'
 import { sanitizeMarkdownForEmail } from '@/services/markdownToEmailHtml'
 import { exportDocAsHtml, exportDocAsMarkdown } from '@/services/siyuanApi'
+import { EMAIL_PRESET_UI_META, getPresetHostCaption, resolveActivePreset } from '@/utils/emailPresetUi'
 import { computed, ref, watch } from 'vue'
 
 const props = defineProps<{
@@ -117,6 +133,19 @@ const statusMsg = ref('')
 const statusType = ref<'success' | 'error'>('success')
 
 const t = (key: string, fallback: string) => props.i18n[key] || fallback
+
+const providerBadge = computed(() => {
+  const config = emailConfig.value
+  const activePreset = resolveActivePreset(config.preset, config.host)
+  const meta = EMAIL_PRESET_UI_META[activePreset.key] || EMAIL_PRESET_UI_META.custom
+  const secondarySource = config.user || config.host || activePreset.host
+
+  return {
+    iconSrc: EMAIL_PRESET_ICONS[meta.iconKey],
+    label: t(meta.labelKey, activePreset.label),
+    secondary: getPresetHostCaption({ host: secondarySource }, t('presetCustomHint', '手动填写 SMTP 参数')),
+  }
+})
 
 const modeOptions = computed(() => ([
   {
@@ -240,6 +269,55 @@ async function handleSend() {
     display: flex;
     gap: 10px;
     flex-shrink: 0;
+  }
+}
+
+.postman-provider-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--pm-border);
+  border-radius: var(--pm-radius-md);
+  background: color-mix(in srgb, var(--pm-accent) 3%, var(--pm-surface-elevated) 97%);
+
+  &__icon-shell {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--pm-field-bg) 88%, white 12%);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pm-border) 85%, transparent);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  &__icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+  }
+
+  &__content {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__label {
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--pm-text);
+  }
+
+  &__secondary {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--pm-text-muted);
+    word-break: break-all;
   }
 }
 

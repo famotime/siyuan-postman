@@ -26,3 +26,19 @@ test('dialog parses recipients with both Chinese and English commas', () => {
   assert.match(source, /\.split\(\/\[，,\]\/\)/)
   assert.match(source, /const\s+toList\s*=\s*parseRecipientList\(toInput\.value\)/)
 })
+
+test('dialog renders current provider badge with preset icon', () => {
+  const source = readFileSync(new URL('./SendMailDialog.vue', import.meta.url), 'utf8')
+
+  for (const token of [
+    'postman-provider-badge',
+    'postman-provider-badge__icon',
+    'providerBadge.iconSrc',
+    'providerBadge.label',
+    'providerBadge.secondary',
+    'EMAIL_PRESET_ICONS',
+    'EMAIL_PRESET_UI_META',
+  ]) {
+    assert.notEqual(source.indexOf(token), -1)
+  }
+})

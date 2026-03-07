@@ -37,6 +37,7 @@
   "presetChina139": "139 Mail",
   "presetGmail": "Gmail",
   "presetCustom": "Custom",
+  "presetCustomHint": "Enter SMTP details manually",
   "topBarTitle": "Postman",
   "topBarNeedDoc": "Please open a document before sending email"
 }

@@ -37,6 +37,7 @@
   "presetChina139": "139 邮箱",
   "presetGmail": "Gmail",
   "presetCustom": "自定义",
+  "presetCustomHint": "手动填写 SMTP 参数",
   "topBarTitle": "邮递员",
   "topBarNeedDoc": "请先打开一个文档后再发送邮件"
 }

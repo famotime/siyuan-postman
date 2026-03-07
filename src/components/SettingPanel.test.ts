@@ -61,3 +61,18 @@ test('password field provides eye toggle for visibility', () => {
   assert.notEqual(source.indexOf('settingShowPassword'), -1)
   assert.notEqual(source.indexOf('settingHidePassword'), -1)
 })
+
+test('preset selector renders icon cards instead of plain text options', () => {
+  const source = readFileSync(new URL('./SettingPanel.vue', import.meta.url), 'utf8')
+
+  for (const token of [
+    'postman-preset-grid',
+    'postman-preset-card',
+    'postman-preset-card__icon',
+    '@click="selectPreset(preset.key)"',
+    ':aria-pressed="form.preset === preset.key"',
+    'preset.iconSrc',
+  ]) {
+    assert.notEqual(source.indexOf(token), -1)
+  }
+})

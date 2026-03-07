@@ -1,24 +1,36 @@
 <template>
   <div class="postman-setting">
     <div class="postman-form">
-      <label class="postman-field">
+      <div class="postman-field">
         <span class="postman-field__label">{{ t('settingPreset', '预设邮箱') }}</span>
-        <span class="postman-select-wrap">
-          <select
-            v-model="form.preset"
-            class="b3-select postman-control"
-            @change="applyPreset"
+        <div class="postman-preset-grid">
+          <button
+            v-for="preset in presets"
+            :key="preset.key"
+            type="button"
+            class="postman-preset-card"
+            :class="{ 'postman-preset-card--active': form.preset === preset.key }"
+            :aria-pressed="form.preset === preset.key"
+            @click="selectPreset(preset.key)"
           >
-            <option
-              v-for="preset in presets"
-              :key="preset.key"
-              :value="preset.key"
-            >
-              {{ preset.label }}
-            </option>
-          </select>
-        </span>
-      </label>
+            <span class="postman-preset-card__icon-shell">
+              <img
+                :src="preset.iconSrc"
+                :alt="preset.label"
+                class="postman-preset-card__icon"
+              >
+            </span>
+            <span class="postman-preset-card__content">
+              <strong class="postman-preset-card__title">{{ preset.label }}</strong>
+              <span class="postman-preset-card__host">{{ preset.hostCaption }}</span>
+            </span>
+            <span
+              class="postman-preset-card__check"
+              aria-hidden="true"
+            />
+          </button>
+        </div>
+      </div>
 
       <div class="postman-setting__inline">
         <label class="postman-field">
@@ -132,8 +144,10 @@
 </template>
 
 <script setup lang="ts">
+import { EMAIL_PRESET_ICONS } from '@/assets/preset-icons'
 import type { EmailConfig } from '@/composables/useEmailConfig'
 import { EMAIL_PRESETS, saveEmailConfig, useEmailConfig } from '@/composables/useEmailConfig'
+import { EMAIL_PRESET_UI_META, getPresetHostCaption } from '@/utils/emailPresetUi'
 import { computed, reactive, ref } from 'vue'
 
 const props = defineProps<{
@@ -147,25 +161,23 @@ const showPassword = ref(false)
 
 const t = (key: string, fallback: string) => props.i18n[key] || fallback
 
-const presetLabelKeyMap: Record<string, string> = {
-  qq: 'presetQQ',
-  '163': 'presetNetease163',
-  '189': 'presetChina189',
-  '139': 'presetChina139',
-  gmail: 'presetGmail',
-  custom: 'presetCustom',
-}
-
 const presets = computed(() => {
   return EMAIL_PRESETS.map((preset) => {
-    const labelKey = presetLabelKeyMap[preset.key]
+    const meta = EMAIL_PRESET_UI_META[preset.key] || EMAIL_PRESET_UI_META.custom
 
     return {
       ...preset,
-      label: labelKey ? t(labelKey, preset.label) : preset.label,
+      iconSrc: EMAIL_PRESET_ICONS[meta.iconKey],
+      label: t(meta.labelKey, preset.label),
+      hostCaption: getPresetHostCaption(preset, t('presetCustomHint', '手动填写 SMTP 参数')),
     }
   })
 })
+
+function selectPreset(presetKey: string) {
+  form.preset = presetKey
+  applyPreset()
+}
 
 function applyPreset() {
   const preset = EMAIL_PRESETS.find(item => item.key === form.preset)
@@ -193,6 +205,97 @@ async function handleSave() {
     grid-template-columns: 1fr minmax(100px, 120px) auto;
     gap: 12px;
     align-items: end;
+  }
+}
+
+.postman-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.postman-preset-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--pm-border);
+  border-radius: 14px;
+  background: var(--pm-surface-elevated);
+  color: var(--pm-text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    border-color: var(--pm-border-strong);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: color-mix(in srgb, var(--pm-accent) 46%, var(--pm-border) 54%);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--pm-accent) 12%, transparent);
+  }
+
+  &--active {
+    border-color: color-mix(in srgb, var(--pm-accent) 54%, var(--pm-border) 46%);
+    background: color-mix(in srgb, var(--pm-accent) 5%, var(--pm-surface-elevated) 95%);
+  }
+
+  &__icon-shell {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--pm-field-bg) 88%, white 12%);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pm-border) 85%, transparent);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  &__icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+  }
+
+  &__content {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__title {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  &__host {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--pm-text-muted);
+    word-break: break-all;
+  }
+
+  &__check {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--pm-border);
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  &--active &__check {
+    border-color: var(--pm-accent);
+    background: var(--pm-accent);
+    box-shadow: inset 0 0 0 2px var(--pm-surface-elevated);
   }
 }
 
