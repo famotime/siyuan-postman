@@ -1,8 +1,8 @@
 {
   "name": "siyuan-postman",
-  "author": "famotime",
+  "author": "QuincyZou",
   "url": "https://github.com/famotime/siyuan-postman",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "minAppVersion": "2.10.14",
   "backends": [
     "all"
