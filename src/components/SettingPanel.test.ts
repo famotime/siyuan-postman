@@ -8,47 +8,45 @@ test('smtp host, port and security stay grouped in the same inline row', () => {
   const inlineIndex = source.indexOf('postman-setting__inline')
   const hostIndex = source.indexOf('v-model="form.host"')
   const portIndex = source.indexOf('v-model.number="form.port"')
-  const securityIndex = source.indexOf('postman-security-card')
+  const sslIndex = source.indexOf('postman-ssl-tag')
 
   assert.notEqual(inlineIndex, -1)
   assert.notEqual(hostIndex, -1)
   assert.notEqual(portIndex, -1)
-  assert.notEqual(securityIndex, -1)
+  assert.notEqual(sslIndex, -1)
 
   assert.equal(inlineIndex < hostIndex, true)
   assert.equal(hostIndex < portIndex, true)
-  assert.equal(portIndex < securityIndex, true)
+  assert.equal(portIndex < sslIndex, true)
 })
 
-test('setting and send views use the same practical modern header and summary layout', () => {
+test('both views use shared form and action primitives', () => {
   const settingSource = readFileSync(new URL('./SettingPanel.vue', import.meta.url), 'utf8')
   const sendSource = readFileSync(new URL('./SendMailDialog.vue', import.meta.url), 'utf8')
 
   for (const source of [settingSource, sendSource]) {
-    assert.notEqual(source.indexOf('postman-panel'), -1)
-    assert.notEqual(source.indexOf('postman-panel-header'), -1)
-    assert.notEqual(source.indexOf('postman-summary-grid'), -1)
-    assert.notEqual(source.indexOf('postman-summary-card'), -1)
-    assert.equal(source.indexOf('postman-shell__stamp'), -1)
+    assert.notEqual(source.indexOf('postman-field'), -1)
+    assert.notEqual(source.indexOf('postman-control'), -1)
+    assert.notEqual(source.indexOf('postman-actions'), -1)
+    assert.notEqual(source.indexOf('postman-btn'), -1)
   }
 })
 
-test('shared styles define neutral surfaces and modern panel primitives', () => {
+test('shared styles define design tokens and form primitives', () => {
   const source = readFileSync(new URL('../index.scss', import.meta.url), 'utf8')
 
   for (const token of [
-    '--pm-surface',
+    '--pm-accent',
     '--pm-surface-elevated',
     '--pm-field-bg',
     '--pm-text-secondary',
-    '--pm-shadow-soft',
+    '--pm-border',
   ]) {
     assert.notEqual(source.indexOf(token), -1)
   }
 
-  assert.notEqual(source.indexOf('.postman-panel-header'), -1)
-  assert.notEqual(source.indexOf('.postman-summary-grid'), -1)
-  assert.notEqual(source.indexOf('.postman-summary-card'), -1)
-  assert.equal(source.indexOf('.postman-shell__stamp'), -1)
+  assert.notEqual(source.indexOf('.postman-field'), -1)
+  assert.notEqual(source.indexOf('.postman-control'), -1)
+  assert.notEqual(source.indexOf('.postman-actions'), -1)
   assert.notEqual(source.indexOf('&::placeholder'), -1)
 })

@@ -1,42 +1,8 @@
 <template>
-  <section class="postman-dialog postman-panel">
-    <header class="postman-panel-header">
-      <div class="postman-panel-header__main">
-        <h3 class="postman-panel-header__title">{{ i18n.dialogTitle }}</h3>
-        <p class="postman-panel-header__subtitle">{{ t('dialogSubtitle', '填写收件人并选择发送方式。') }}</p>
-      </div>
-
-      <span class="postman-badge" :class="{ 'postman-badge--warning': !configReady }">
-        {{ configReady ? t('dialogRelayReady', '已就绪') : t('dialogRelayMissing', '需要配置') }}
-      </span>
-    </header>
-
-    <div class="postman-summary-grid">
-      <article class="postman-summary-card postman-summary-card--wide">
-        <span class="postman-summary-card__label">{{ t('dialogDocLabel', '当前文档') }}</span>
-        <strong class="postman-summary-card__value postman-summary-card__value--wrap">{{ docTitle }}</strong>
-        <span class="postman-summary-card__hint">{{ t('dialogSubjectHint', '默认使用当前文档标题。') }}</span>
-      </article>
-
-      <article class="postman-summary-card">
-        <span class="postman-summary-card__label">{{ t('dialogModeLabel', '发送方式') }}</span>
-        <strong class="postman-summary-card__value">{{ currentModeCard.title }}</strong>
-        <span class="postman-summary-card__hint">{{ currentModeCard.desc }}</span>
-      </article>
-
-      <article class="postman-summary-card" :class="{ 'postman-summary-card--warning': !configReady }">
-        <span class="postman-summary-card__label">{{ t('dialogRelayLabel', 'SMTP 状态') }}</span>
-        <strong class="postman-summary-card__value">{{ configReady ? t('dialogRelayReady', '已就绪') : t('dialogRelayMissing', '需要配置') }}</strong>
-        <span class="postman-summary-card__hint">{{ configReady ? relaySummary : t('dialogReadyHint', '发送前请先确认 SMTP 设置完整。') }}</span>
-      </article>
-    </div>
-
-    <div class="postman-dialog__form">
+  <div class="postman-dialog">
+    <div class="postman-form">
       <label class="postman-field">
-        <span class="postman-field__header">
-          <span class="postman-field__label">{{ i18n.dialogTo }}</span>
-          <span class="postman-field__hint">{{ t('dialogRecipientsHint', '多个地址可用逗号或空格分隔。') }}</span>
-        </span>
+        <span class="postman-field__label">{{ i18n.dialogTo }}</span>
         <input
           v-model="toInput"
           class="b3-text-field postman-control"
@@ -47,21 +13,16 @@
       </label>
 
       <label class="postman-field">
-        <span class="postman-field__header">
-          <span class="postman-field__label">{{ i18n.dialogSubject }}</span>
-          <span class="postman-field__hint">{{ t('dialogSubjectHint', '默认使用当前文档标题。') }}</span>
-        </span>
-        <input v-model="subject" class="b3-text-field postman-control" type="text">
+        <span class="postman-field__label">{{ i18n.dialogSubject }}</span>
+        <input
+          v-model="subject"
+          class="b3-text-field postman-control"
+          type="text"
+        >
       </label>
 
-      <section class="postman-card">
-        <div class="postman-card__head">
-          <div>
-            <h4 class="postman-card__title">{{ t('dialogModeLabel', '发送方式') }}</h4>
-          </div>
-          <p class="postman-card__hint">{{ t('dialogSendHint', '正文模式发送渲染后的 HTML，附件模式导出 Markdown 或 ZIP。') }}</p>
-        </div>
-
+      <div class="postman-field">
+        <span class="postman-field__label">{{ t('dialogModeLabel', '发送方式') }}</span>
         <div class="postman-mode-grid">
           <label
             v-for="option in modeOptions"
@@ -69,20 +30,35 @@
             class="postman-mode-card"
             :class="{ 'postman-mode-card--active': localMode === option.value }"
           >
-            <input v-model="localMode" type="radio" :value="option.value" class="postman-radio">
-            <span class="postman-mode-card__check" />
-            <strong class="postman-mode-card__title">{{ option.title }}</strong>
+            <input
+              v-model="localMode"
+              type="radio"
+              :value="option.value"
+              class="postman-radio"
+            >
+            <div class="postman-mode-card__header">
+              <span class="postman-mode-card__check" />
+              <strong class="postman-mode-card__title">{{ option.title }}</strong>
+            </div>
             <span class="postman-mode-card__desc">{{ option.desc }}</span>
           </label>
         </div>
-      </section>
+      </div>
     </div>
 
-    <footer class="postman-actions postman-dialog__actions">
+    <footer class="postman-actions">
       <div class="postman-actions__copy">
-        <p class="postman-actions__hint">{{ configReady ? relaySummary : t('dialogReadyHint', '发送前请先确认 SMTP 设置完整。') }}</p>
-
-        <div v-if="statusMsg" :class="['postman-status', statusType === 'error' ? 'postman-status--error' : 'postman-status--success']">
+        <div
+          v-if="!configReady"
+          class="postman-status postman-status--error"
+        >
+          <span class="postman-status__dot" />
+          <span>{{ i18n.noConfigError }}</span>
+        </div>
+        <div
+          v-else-if="statusMsg"
+          :class="['postman-status', statusType === 'error' ? 'postman-status--error' : 'postman-status--success']"
+        >
           <span class="postman-status__dot" />
           <span>{{ statusMsg }}</span>
         </div>
@@ -101,12 +77,15 @@
           :disabled="sending || !canSend"
           @click="handleSend"
         >
-          <span v-if="sending" class="postman-spinner" />
-          <span class="postman-btn__label">{{ sending ? i18n.dialogSending : i18n.dialogSend }}</span>
+          <span
+            v-if="sending"
+            class="postman-spinner"
+          />
+          {{ sending ? i18n.dialogSending : i18n.dialogSend }}
         </button>
       </div>
     </footer>
-  </section>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -141,33 +120,19 @@ const t = (key: string, fallback: string) => props.i18n[key] || fallback
 const modeOptions = computed(() => ([
   {
     value: 'body' as SendMode,
-    title: t('dialogModeBodyTitle', props.i18n.sendAsBody || '正文发送'),
+    title: t('dialogModeBodyTitle', '正文发送'),
     desc: t('dialogModeBodyDesc', '适合直接阅读的 HTML 邮件正文。'),
   },
   {
     value: 'attachment' as SendMode,
-    title: t('dialogModeAttachmentTitle', props.i18n.sendAsAttachment || '附件发送'),
+    title: t('dialogModeAttachmentTitle', '附件发送'),
     desc: t('dialogModeAttachmentDesc', '导出 Markdown 或带图片资源的 ZIP 文件。'),
   },
 ]))
 
-const currentModeCard = computed(() => {
-  return modeOptions.value.find(option => option.value === localMode.value) || modeOptions.value[0]
-})
-
 const configReady = computed(() => {
   const config = emailConfig.value
   return Boolean(config.host && config.user && config.password)
-})
-
-const relaySummary = computed(() => {
-  const config = emailConfig.value
-
-  if (!config.host) {
-    return t('dialogReadyHint', '发送前请先确认 SMTP 设置完整。')
-  }
-
-  return `${config.host}:${config.port} · SSL/TLS`
 })
 
 const canSend = computed(() => toInput.value.trim().length > 0)
@@ -247,20 +212,9 @@ async function handleSend() {
 
 <style lang="scss">
 .postman-dialog {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-
-  &__form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
   &__actions-group {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     flex-shrink: 0;
   }
 }
@@ -268,56 +222,62 @@ async function handleSend() {
 .postman-mode-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
 .postman-mode-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  min-height: 136px;
-  padding: 16px;
-  border-radius: var(--pm-radius-lg);
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: var(--pm-radius-md);
   border: 1px solid var(--pm-border);
   background: var(--pm-surface-elevated);
   cursor: pointer;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  transition: border-color 0.15s ease, background 0.15s ease;
 
   &:hover {
-    transform: translateY(-1px);
     border-color: var(--pm-border-strong);
-    box-shadow: var(--pm-shadow-soft);
   }
 
   &--active {
-    border-color: color-mix(in srgb, var(--pm-accent) 42%, var(--pm-border) 58%);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--pm-accent) 12%, transparent);
+    border-color: color-mix(in srgb, var(--pm-accent) 50%, var(--pm-border) 50%);
+    background: color-mix(in srgb, var(--pm-accent) 4%, var(--pm-surface-elevated) 96%);
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   &__check {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
-    border: 2px solid color-mix(in srgb, var(--pm-accent) 24%, var(--pm-border) 76%);
-    background: var(--pm-surface);
+    border: 2px solid var(--pm-border);
+    flex-shrink: 0;
+    transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
   }
 
   &--active &__check {
     border-color: var(--pm-accent);
-    box-shadow: inset 0 0 0 4px var(--pm-surface), 0 0 0 8px color-mix(in srgb, var(--pm-accent) 96%, transparent);
+    background: var(--pm-accent);
+    box-shadow: inset 0 0 0 2.5px var(--pm-surface-elevated);
   }
 
   &__title {
-    font-size: 16px;
-    line-height: 1.35;
+    font-size: 14px;
+    line-height: 1.4;
     color: var(--pm-text);
   }
 
   &__desc {
-    font-size: 13px;
-    line-height: 1.6;
+    font-size: 12px;
+    line-height: 1.5;
     color: var(--pm-text-secondary);
+    padding-left: 22px;
   }
 }
 
@@ -325,21 +285,5 @@ async function handleSend() {
   position: absolute;
   opacity: 0;
   pointer-events: none;
-}
-
-@media (max-width: 720px) {
-  .postman-dialog {
-    &__actions-group {
-      width: 100%;
-    }
-
-    &__actions-group > .postman-btn {
-      flex: 1;
-    }
-  }
-
-  .postman-mode-grid {
-    grid-template-columns: 1fr;
-  }
 }
 </style>
