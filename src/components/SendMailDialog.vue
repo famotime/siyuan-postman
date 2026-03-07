@@ -92,6 +92,7 @@
 import type { SendMode } from '@/services/emailService'
 import { useEmailConfig } from '@/composables/useEmailConfig'
 import { sendEmail } from '@/services/emailService'
+import { sanitizeMarkdownForEmail } from '@/services/markdownToEmailHtml'
 import { exportDocAsHtml, exportDocAsMarkdown } from '@/services/siyuanApi'
 import { computed, ref, watch } from 'vue'
 
@@ -170,7 +171,7 @@ async function handleSend() {
     }
     else {
       const result = await exportDocAsMarkdown(props.docId)
-      mdContent = result.content
+      mdContent = sanitizeMarkdownForEmail(result.content)
     }
 
     await sendEmail({
