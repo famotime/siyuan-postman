@@ -90,7 +90,7 @@
 
 <script setup lang="ts">
 import type { SendMode } from '@/services/emailService'
-import { useEmailConfig } from '@/composables/useEmailConfig'
+import { saveEmailConfig, useEmailConfig } from '@/composables/useEmailConfig'
 import { sendEmail } from '@/services/emailService'
 import { sanitizeMarkdownForEmail } from '@/services/markdownToEmailHtml'
 import { exportDocAsHtml, exportDocAsMarkdown } from '@/services/siyuanApi'
@@ -108,13 +108,13 @@ const emit = defineEmits<{
   success: []
 }>()
 
-const toInput = ref('')
+const emailConfig = useEmailConfig()
+const toInput = ref(emailConfig.value.lastTo || '')
 const subject = ref(props.docTitle)
 const localMode = ref<SendMode>(props.mode)
 const sending = ref(false)
 const statusMsg = ref('')
 const statusType = ref<'success' | 'error'>('success')
-const emailConfig = useEmailConfig()
 
 const t = (key: string, fallback: string) => props.i18n[key] || fallback
 
@@ -142,12 +142,22 @@ watch(() => props.mode, (value) => {
   localMode.value = value
 })
 
-async function handleSend() {
-  statusMsg.value = ''
-  const toList = toInput.value
-    .split(/[,，\s]+/)
+watch(() => emailConfig.value.lastTo, (value) => {
+  if (!toInput.value.trim() && value) {
+    toInput.value = value
+  }
+}, { immediate: true })
+
+function parseRecipientList(input: string): string[] {
+  return input
+    .split(/[，,]/)
     .map(email => email.trim())
     .filter(Boolean)
+}
+
+async function handleSend() {
+  statusMsg.value = ''
+  const toList = parseRecipientList(toInput.value)
 
   if (!toList.length) {
     return
@@ -183,6 +193,18 @@ async function handleSend() {
       htmlContent,
       mdContent,
     })
+
+    const lastToValue = toList.join(', ')
+    toInput.value = lastToValue
+    try {
+      await saveEmailConfig({
+        ...config,
+        lastTo: lastToValue,
+      })
+    }
+    catch (saveError) {
+      console.warn('[siyuan-postman] 保存上次收件人失败', saveError)
+    }
 
     statusMsg.value = props.i18n.dialogSuccess
     statusType.value = 'success'

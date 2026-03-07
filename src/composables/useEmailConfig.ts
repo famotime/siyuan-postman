@@ -22,6 +22,7 @@ export interface EmailConfig {
   user: string
   password: string
   fromName: string
+  lastTo: string
 }
 
 /** 预置邮箱列表 */
@@ -43,6 +44,7 @@ const DEFAULT_CONFIG: EmailConfig = {
   user: '',
   password: '',
   fromName: '',
+  lastTo: '',
 }
 
 const CONFIG_KEY = 'postman-smtp-config.json'
@@ -54,6 +56,7 @@ export function normalizeEmailConfig(config?: Partial<EmailConfig> | null): Emai
     ...DEFAULT_CONFIG,
     ...config,
     secure: true,
+    lastTo: typeof config?.lastTo === 'string' ? config.lastTo : DEFAULT_CONFIG.lastTo,
   }
 
   if (!SUPPORTED_PRESET_KEYS.has(normalizedConfig.preset)) {

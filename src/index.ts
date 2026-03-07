@@ -106,7 +106,7 @@ export default class PostmanPlugin extends Plugin {
       click: () => this.showSendDialog(docId, 'body'),
     })
     menu.addItem({
-      icon: 'iconAttachment',
+      icon: 'iconDownload',
       label: this.t.sendAsAttachment || '作为附件发送 Email',
       click: () => this.showSendDialog(docId, 'attachment'),
     })
@@ -127,7 +127,7 @@ export default class PostmanPlugin extends Plugin {
       click: () => this.showSendDialog(docId, 'body'),
     })
     menu.addItem({
-      icon: 'iconAttachment',
+      icon: 'iconDownload',
       label: this.t.sendAsAttachment || '作为附件发送 Email',
       click: () => this.showSendDialog(docId, 'attachment'),
     })
@@ -175,4 +175,3 @@ export default class PostmanPlugin extends Plugin {
     observer.observe(document.body, { childList: true, subtree: true })
   }
 }
-
