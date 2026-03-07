@@ -60,6 +60,16 @@ test('markdownToEmailHtml keeps nested list hierarchy when list items are separa
   assert.match(html, /<ul[^>]*>[\s\S]*<li[^>]*>一级项[\s\S]*<ul[^>]*>[\s\S]*<li[^>]*>二级项 A[\s\S]*<ul[^>]*>[\s\S]*三级项 A-1[\s\S]*<\/ul>[\s\S]*<\/li>[\s\S]*<li[^>]*>二级项 B[\s\S]*<\/li>[\s\S]*<\/ul>[\s\S]*<\/li>/)
 })
 
+test('markdownToEmailHtml keeps link text but removes clickable targets', () => {
+  const markdown = '参考链接：[OpenAI 官方站点](https://openai.com/)'
+
+  const html = markdownToEmailHtml(markdown)
+
+  assert.match(html, /OpenAI 官方站点/)
+  assert.doesNotMatch(html, /https:\/\/openai\.com/)
+  assert.doesNotMatch(html, /<a\s+href=/)
+})
+
 test('sanitizeMarkdownForEmail removes backlink sections', () => {
   const markdown = [
     '# 正文标题',
@@ -126,13 +136,33 @@ test('sanitizeMarkdownForEmail removes mention section and kramdown ial lines', 
   assert.match(sanitized, /- 二级项/)
 })
 
-test('sanitizeMarkdownForEmail strips block-ref anchor text from other documents', () => {
-  const markdown = '关联块：((20200813131152-0wk5akh "在内容块中遨游"))'
+test('sanitizeMarkdownForEmail keeps user-authored "反向链接文档" section content', () => {
+  const markdown = [
+    '# ~OpenClaw',
+    '',
+    '## 反向链接文档',
+    '- [Cloudflare官方出手!OpenClaw 云端部署保姆级教程](siyuan://blocks/20260207090016-xosnajd)',
+    '- ((20260215060020-fivungd "鹿导：开箱即用：9个OpenClaw+飞书 Skills自动化 ***"))',
+  ].join('\n')
 
   const sanitized = sanitizeMarkdownForEmail(markdown)
 
-  assert.match(sanitized, /\(\(20200813131152-0wk5akh\)\)/)
-  assert.doesNotMatch(sanitized, /在内容块中遨游/)
+  assert.match(sanitized, /## 反向链接文档/)
+  assert.match(sanitized, /Cloudflare官方出手!OpenClaw 云端部署保姆级教程/)
+  assert.match(sanitized, /鹿导：开箱即用：9个OpenClaw\+飞书 Skills自动化 \*\*\*/)
+  assert.doesNotMatch(sanitized, /siyuan:\/\/blocks/)
+  assert.doesNotMatch(sanitized, /20260215060020-fivungd/)
+})
+
+test('sanitizeMarkdownForEmail keeps block-ref visible text but removes ref target', () => {
+  const markdown = '关联块：((20200813131152-0wk5akh "在内容块中遨游"))，更多参考：[OpenAI](https://openai.com)'
+
+  const sanitized = sanitizeMarkdownForEmail(markdown)
+
+  assert.match(sanitized, /关联块：在内容块中遨游/)
+  assert.match(sanitized, /更多参考：OpenAI/)
+  assert.doesNotMatch(sanitized, /20200813131152-0wk5akh/)
+  assert.doesNotMatch(sanitized, /https:\/\/openai\.com/)
 })
 
 test('sanitizeMarkdownForEmail removes backlink footnote sections and linked footnote documents', () => {
