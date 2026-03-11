@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Send SiYuan documents as email (body or attachment) via SMTP",
-  "author": "famotime",
+  "author": "QuincyZou",
   "license": "MIT",
   "homepage": "https://github.com/famotime/siyuan-postman",
   "repository": "https://github.com/famotime/siyuan-postman",

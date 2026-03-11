@@ -21,9 +21,7 @@
     "zh_CN": "通过 SMTP 将思源笔记文档一键发送为邮件（正文或附件），预置支持 QQ、163、189、139 等常用邮箱。"
   },
   "readme": {
-    "default": "README_zh_CN.md",
-    "en_US": "README.md",
-    "zh_CN": "README_zh_CN.md"
+    "default": "README.md"
   },
   "funding": {
     "custom": []
