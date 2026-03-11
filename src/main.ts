@@ -15,7 +15,7 @@ export function usePlugin(pluginInstance?: Plugin): Plugin {
     plugin = pluginInstance
   }
   if (!plugin) {
-    console.error('[siyuan-postman] Plugin 实例未绑定，请先调用 init()')
+    throw new Error('PLUGIN_NOT_INITIALIZED')
   }
   return plugin!
 }

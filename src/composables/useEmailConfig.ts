@@ -93,8 +93,8 @@ export async function loadEmailConfig(): Promise<EmailConfig> {
       emailConfig.value = normalizeEmailConfig(data as Partial<EmailConfig>)
     }
   }
-  catch (e) {
-    console.warn('[siyuan-postman] 加载配置失败，使用默认值', e)
+  catch {
+    emailConfig.value = normalizeEmailConfig()
   }
   return emailConfig.value
 }

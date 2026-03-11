@@ -232,8 +232,8 @@ async function handleSend() {
         hasSentSuccessfully: true,
       })
     }
-    catch (saveError) {
-      console.warn('[siyuan-postman] 保存上次收件人失败', saveError)
+    catch {
+      // 保持发送成功结果，不因本地缓存失败打断流程。
     }
 
     statusMsg.value = props.i18n.dialogSuccess

@@ -55,8 +55,6 @@ export default class PostmanPlugin extends Plugin {
 
     this.eventBus.on('open-menu-doctree', this.onDocTreeMenu.bind(this))
     this.eventBus.on('click-editortitleicon', this.onEditorTitleMenu.bind(this))
-
-    console.log(`[siyuan-postman] v${this.version} loaded`)
   }
 
   onunload() {

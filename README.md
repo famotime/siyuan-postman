@@ -31,7 +31,7 @@
 
 > 当前版本仅支持 **SSL/TLS** 加密连接；如 SMTP 服务仅提供 **STARTTLS**，则暂不支持。
 
-![image](assets/image-20260311195229-e5zv4rr.png)
+![image](https://raw.githubusercontent.com/famotime/siyuan-postman/main/assets/image-20260311195229-e5zv4rr.png)
 
 **常用邮箱配置参考：**
 
@@ -52,8 +52,8 @@
 - **作为正文发 Email** → 填写收件人和主题，一键发送 HTML 邮件
 - **作为附件发 Email** → 将文档打包为 `.md` 附件发送
 
-![image-20260307133820393](assets/image-20260307133820393-20260307134820-2afhs4w.png)
+![image-20260307133820393](https://raw.githubusercontent.com/famotime/siyuan-postman/main/assets/image-20260307133820393-20260307134820-2afhs4w.png)
 
-![image](assets/image-20260311195335-fo7n0qt.png)
+![image](https://raw.githubusercontent.com/famotime/siyuan-postman/main/assets/image-20260311195335-fo7n0qt.png)
 
-![image-20260307134302551](assets/image-20260307134302551-20260307134820-elngq5o.png)
+![image-20260307134302551](https://raw.githubusercontent.com/famotime/siyuan-postman/main/assets/image-20260307134302551-20260307134820-elngq5o.png)

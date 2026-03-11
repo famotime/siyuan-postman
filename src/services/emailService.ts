@@ -59,8 +59,7 @@ function requireNodeModule(moduleName: string): any {
     const modPath = path.join(wsDir, 'data', 'plugins', pluginName, 'node_modules', moduleName)
     return (window as any).require(modPath)
   }
-  catch (e) {
-    console.error(`[siyuan-postman] module loader error (${moduleName}):`, e)
+  catch {
     throw new Error(`${moduleName.toUpperCase()}_NOT_FOUND`)
   }
 }
