@@ -49,7 +49,7 @@ const DEFAULT_CONFIG: EmailConfig = {
   hasSentSuccessfully: false,
 }
 
-const CONFIG_KEY = 'postman-smtp-config.json'
+export const EMAIL_CONFIG_STORAGE_KEY = 'postman-smtp-config.json'
 
 const SUPPORTED_PRESET_KEYS = new Set(EMAIL_PRESETS.map(preset => preset.key))
 
@@ -87,7 +87,7 @@ export function bindPlugin(plugin: Plugin) {
 export async function loadEmailConfig(): Promise<EmailConfig> {
   if (!pluginRef) return { ...DEFAULT_CONFIG }
   try {
-    const data = await pluginRef.loadData(CONFIG_KEY)
+    const data = await pluginRef.loadData(EMAIL_CONFIG_STORAGE_KEY)
     if (data && typeof data === 'object') {
       // 合并默认配置，兼容旧版本字段缺失
       emailConfig.value = normalizeEmailConfig(data as Partial<EmailConfig>)
@@ -106,7 +106,7 @@ export async function saveEmailConfig(config: EmailConfig): Promise<void> {
   if (!pluginRef) return
   const normalizedConfig = normalizeEmailConfig(config)
   emailConfig.value = normalizedConfig
-  await pluginRef.saveData(CONFIG_KEY, normalizedConfig)
+  await pluginRef.saveData(EMAIL_CONFIG_STORAGE_KEY, normalizedConfig)
 }
 
 /**

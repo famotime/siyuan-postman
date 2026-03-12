@@ -73,7 +73,10 @@ export default defineConfig(({
             dest: "./",
           },
           {
-            src: "./src/i18n/**",
+            src: [
+              "./src/i18n/zh_CN.json",
+              "./src/i18n/en_US.json",
+            ],
             dest: "./i18n/",
           },
           {

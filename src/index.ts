@@ -9,7 +9,7 @@ import {
 import '@/index.scss'
 import PluginInfoString from '@/../plugin.json'
 import { destroy, init } from '@/main'
-import { bindPlugin, loadEmailConfig, useEmailConfig } from '@/composables/useEmailConfig'
+import { EMAIL_CONFIG_STORAGE_KEY, bindPlugin, loadEmailConfig, useEmailConfig } from '@/composables/useEmailConfig'
 import { getDocTitle } from '@/services/siyuanApi'
 import { createApp, defineComponent, h } from 'vue'
 import SendMailDialog from '@/components/SendMailDialog.vue'
@@ -61,6 +61,13 @@ export default class PostmanPlugin extends Plugin {
     this.eventBus.off('open-menu-doctree', this.onDocTreeMenu.bind(this))
     this.eventBus.off('click-editortitleicon', this.onEditorTitleMenu.bind(this))
     destroy()
+  }
+
+  uninstall() {
+    this.removeData(EMAIL_CONFIG_STORAGE_KEY).catch((error) => {
+      const reason = error instanceof Error ? error.message : String((error as { msg?: string } | null)?.msg ?? error)
+      showMessage(`uninstall [${this.name}] remove data [${EMAIL_CONFIG_STORAGE_KEY}] fail: ${reason}`, 3000, 'error')
+    })
   }
 
   openSetting() {
