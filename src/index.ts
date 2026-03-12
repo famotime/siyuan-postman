@@ -119,8 +119,8 @@ export default class PostmanPlugin extends Plugin {
   }
 
   private onTopBarClick(event: MouseEvent) {
-    const configRef = useEmailConfig()
-    if (!configRef.value.hasSentSuccessfully) {
+    const configState = useEmailConfig()
+    if (!configState.value.accounts.length) {
       this.openSetting()
       return
     }

@@ -2,6 +2,35 @@
   <div class="postman-setting">
     <div class="postman-form">
       <div class="postman-field">
+        <span class="postman-field__label">{{ t('settingAccount', '发件账号') }}</span>
+        <div class="postman-account-row">
+          <select
+            v-model="selectedId"
+            class="b3-select postman-control postman-account-select"
+          >
+            <option
+              v-for="option in accountOptions"
+              :key="option.id"
+              :value="option.id"
+            >
+              {{ option.label }}
+            </option>
+            <option :value="NEW_ACCOUNT_KEY">
+              {{ t('settingAccountNew', '新增账号') }}
+            </option>
+          </select>
+          <button
+            type="button"
+            class="b3-button postman-btn postman-btn--ghost"
+            :disabled="!canRemoveAccount"
+            @click="handleRemove"
+          >
+            {{ t('settingAccountRemove', '删除账号') }}
+          </button>
+        </div>
+      </div>
+
+      <div class="postman-field">
         <span class="postman-field__label">{{ t('settingPreset', '预设邮箱') }}</span>
         <div class="postman-preset-grid">
           <button
@@ -146,20 +175,45 @@
 <script setup lang="ts">
 import { EMAIL_PRESET_ICONS } from '@/assets/preset-icons'
 import type { EmailConfig } from '@/composables/useEmailConfig'
-import { EMAIL_PRESETS, saveEmailConfig, useEmailConfig } from '@/composables/useEmailConfig'
+import {
+  EMAIL_PRESETS,
+  normalizeEmailConfig,
+  removeEmailConfig,
+  saveEmailConfig,
+  setActiveEmailConfig,
+  useEmailConfig,
+} from '@/composables/useEmailConfig'
 import { EMAIL_PRESET_UI_META, getPresetHostCaption } from '@/utils/emailPresetUi'
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 
 const props = defineProps<{
   i18n: Record<string, string>
 }>()
 
+const NEW_ACCOUNT_KEY = '__new__'
+
 const configRef = useEmailConfig()
-const form = reactive<EmailConfig>({ ...configRef.value, secure: true })
+const form = reactive<EmailConfig>(normalizeEmailConfig())
+const selectedId = ref(
+  configRef.value.activeId
+  || configRef.value.accounts[0]?.id
+  || NEW_ACCOUNT_KEY,
+)
 const savedMsg = ref('')
 const showPassword = ref(false)
 
 const t = (key: string, fallback: string) => props.i18n[key] || fallback
+
+const accountOptions = computed(() => {
+  return configRef.value.accounts.map(account => ({
+    id: account.id,
+    label: account.user || account.fromName || account.host || t('settingAccountUnnamed', '未命名账号'),
+  }))
+})
+
+const canRemoveAccount = computed(() => {
+  return configRef.value.accounts.length > 1 && selectedId.value !== NEW_ACCOUNT_KEY
+})
 
 const presets = computed(() => {
   return EMAIL_PRESETS.map((preset) => {
@@ -173,6 +227,34 @@ const presets = computed(() => {
     }
   })
 })
+
+watch(selectedId, async (value) => {
+  if (value === NEW_ACCOUNT_KEY) {
+    Object.assign(form, normalizeEmailConfig())
+    return
+  }
+
+  const account = configRef.value.accounts.find(item => item.id === value)
+  if (account) {
+    Object.assign(form, account)
+    await setActiveEmailConfig(account.id)
+  }
+}, { immediate: true })
+
+watch(() => configRef.value.accounts, (accounts) => {
+  if (!accounts.length) {
+    selectedId.value = NEW_ACCOUNT_KEY
+    return
+  }
+
+  if (selectedId.value === NEW_ACCOUNT_KEY) {
+    return
+  }
+
+  if (!accounts.some(account => account.id === selectedId.value)) {
+    selectedId.value = configRef.value.activeId || accounts[0]?.id || NEW_ACCOUNT_KEY
+  }
+}, { immediate: true })
 
 function selectPreset(presetKey: string) {
   form.preset = presetKey
@@ -190,11 +272,23 @@ function applyPreset() {
 }
 
 async function handleSave() {
-  await saveEmailConfig({ ...form, secure: true })
+  const normalized = normalizeEmailConfig({ ...form, secure: true })
+  await saveEmailConfig(normalized)
+  selectedId.value = normalized.id
   savedMsg.value = t('settingSaveSuccess', '设置已保存')
   window.setTimeout(() => {
     savedMsg.value = ''
   }, 2500)
+}
+
+async function handleRemove() {
+  if (!canRemoveAccount.value || selectedId.value === NEW_ACCOUNT_KEY) {
+    return
+  }
+  await removeEmailConfig(selectedId.value)
+  selectedId.value = configRef.value.activeId
+    || configRef.value.accounts[0]?.id
+    || NEW_ACCOUNT_KEY
 }
 </script>
 
@@ -206,6 +300,13 @@ async function handleSave() {
     gap: 12px;
     align-items: end;
   }
+}
+
+.postman-account-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
 }
 
 .postman-preset-grid {

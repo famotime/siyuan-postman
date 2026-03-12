@@ -21,6 +21,29 @@
         >
       </label>
 
+      <label class="postman-field">
+        <span class="postman-field__label">{{ t('dialogAccountLabel', '发件账号') }}</span>
+        <select
+          v-model="selectedAccountId"
+          class="b3-select postman-control postman-account-select"
+          :disabled="!accountOptions.length"
+        >
+          <option
+            v-if="!accountOptions.length"
+            value=""
+          >
+            {{ t('dialogAccountEmpty', '尚未配置邮箱') }}
+          </option>
+          <option
+            v-for="option in accountOptions"
+            :key="option.id"
+            :value="option.id"
+          >
+            {{ option.label }}
+          </option>
+        </select>
+      </label>
+
       <div class="postman-provider-badge">
         <span class="postman-provider-badge__icon-shell">
           <img
@@ -104,7 +127,7 @@
 
 <script setup lang="ts">
 import { EMAIL_PRESET_ICONS } from '@/assets/preset-icons'
-import { saveEmailConfig, useEmailConfig } from '@/composables/useEmailConfig'
+import { saveEmailConfig, setActiveEmailConfig, useEmailConfig } from '@/composables/useEmailConfig'
 import type { SendMode } from '@/services/emailService'
 import { sendEmail } from '@/services/emailService'
 import { sanitizeMarkdownForEmail } from '@/services/markdownToEmailHtml'
@@ -124,18 +147,69 @@ const emit = defineEmits<{
   success: []
 }>()
 
-const emailConfig = useEmailConfig()
-const toInput = ref(emailConfig.value.lastTo || '')
+const t = (key: string, fallback: string) => props.i18n[key] || fallback
+
+const configState = useEmailConfig()
+const selectedAccountId = ref('')
+const accountOptions = computed(() => {
+  return configState.value.accounts.map(account => ({
+    id: account.id,
+    label: account.user || account.fromName || account.host || t('dialogAccountUnnamed', '未命名账号'),
+  }))
+})
+
+watch(
+  [accountOptions, () => configState.value.activeId],
+  ([options, activeId]) => {
+    if (!options.length) {
+      selectedAccountId.value = ''
+      return
+    }
+
+    const stillExists = options.some(option => option.id === selectedAccountId.value)
+    if (stillExists) {
+      return
+    }
+
+    const nextId = options.some(option => option.id === activeId)
+      ? activeId || ''
+      : options[0]?.id
+
+    selectedAccountId.value = nextId || ''
+  },
+  { immediate: true },
+)
+
+watch(selectedAccountId, (value) => {
+  if (value) {
+    setActiveEmailConfig(value).catch(() => {})
+  }
+})
+
+const activeAccount = computed(() => {
+  if (!accountOptions.value.length) return null
+  const current = configState.value.accounts.find(account => account.id === selectedAccountId.value)
+  return current || configState.value.accounts[0] || null
+})
+
+const toInput = ref(activeAccount.value?.lastTo || '')
 const subject = ref(props.docTitle)
 const localMode = ref<SendMode>(props.mode)
 const sending = ref(false)
 const statusMsg = ref('')
 const statusType = ref<'success' | 'error'>('success')
 
-const t = (key: string, fallback: string) => props.i18n[key] || fallback
-
 const providerBadge = computed(() => {
-  const config = emailConfig.value
+  const config = activeAccount.value
+  if (!config) {
+    const meta = EMAIL_PRESET_UI_META.custom
+    return {
+      iconSrc: EMAIL_PRESET_ICONS[meta.iconKey],
+      label: t(meta.labelKey, '自定义'),
+      secondary: t('dialogAccountEmpty', '尚未配置邮箱'),
+    }
+  }
+
   const activePreset = resolveActivePreset(config.preset, config.host)
   const meta = EMAIL_PRESET_UI_META[activePreset.key] || EMAIL_PRESET_UI_META.custom
   const secondarySource = config.user || config.host || activePreset.host
@@ -161,8 +235,8 @@ const modeOptions = computed(() => ([
 ]))
 
 const configReady = computed(() => {
-  const config = emailConfig.value
-  return Boolean(config.host && config.user && config.password)
+  const config = activeAccount.value
+  return Boolean(config?.host && config?.user && config?.password)
 })
 
 const canSend = computed(() => toInput.value.trim().length > 0)
@@ -171,7 +245,7 @@ watch(() => props.mode, (value) => {
   localMode.value = value
 })
 
-watch(() => emailConfig.value.lastTo, (value) => {
+watch(() => activeAccount.value?.lastTo, (value) => {
   if (!toInput.value.trim() && value) {
     toInput.value = value
   }
@@ -192,8 +266,8 @@ async function handleSend() {
     return
   }
 
-  const config = emailConfig.value
-  if (!config.host || !config.user || !config.password) {
+  const config = activeAccount.value
+  if (!config?.host || !config?.user || !config?.password) {
     statusMsg.value = props.i18n.noConfigError
     statusType.value = 'error'
     return

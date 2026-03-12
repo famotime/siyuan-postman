@@ -12,9 +12,9 @@ test('attachment mode sanitizes markdown before sendEmail', () => {
 test('dialog uses last successful recipients as default and persists them on success', () => {
   const source = readFileSync(new URL('./SendMailDialog.vue', import.meta.url), 'utf8')
 
-  assert.match(source, /import\s+\{\s*saveEmailConfig,\s*useEmailConfig\s*\}\s+from\s+['"]@\/composables\/useEmailConfig['"]/)
-  assert.match(source, /const\s+toInput\s*=\s*ref\(emailConfig\.value\.lastTo\s*\|\|\s*''\)/)
-  assert.match(source, /watch\(\(\)\s*=>\s*emailConfig\.value\.lastTo,\s*\(value\)\s*=>\s*\{/)
+  assert.match(source, /import\s+\{[^}]*saveEmailConfig[^}]*useEmailConfig[^}]*\}\s+from\s+['"]@\/composables\/useEmailConfig['"]/)
+  assert.match(source, /const\s+toInput\s*=\s*ref\(activeAccount\.value\?\.lastTo\s*\|\|\s*''\)/)
+  assert.match(source, /watch\(\(\)\s*=>\s*activeAccount\.value\?\.lastTo,\s*\(value\)\s*=>\s*\{/)
   assert.match(source, /const\s+lastToValue\s*=\s*toList\.join\(', '\)/)
   assert.match(source, /await\s+saveEmailConfig\(\{\s*\.\.\.config,\s*lastTo:\s*lastToValue,\s*hasSentSuccessfully:\s*true,\s*\}\)/)
 })
@@ -31,6 +31,7 @@ test('dialog renders current provider badge with preset icon', () => {
   const source = readFileSync(new URL('./SendMailDialog.vue', import.meta.url), 'utf8')
 
   for (const token of [
+    'postman-account-select',
     'postman-provider-badge',
     'postman-provider-badge__icon',
     'providerBadge.iconSrc',
