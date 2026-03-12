@@ -216,3 +216,49 @@ test('sanitizeMarkdownForEmail removes expanded linked-doc footnotes defined by 
   assert.doesNotMatch(sanitized, /OpenClaw 安装 Skills/)
   assert.doesNotMatch(sanitized, /被展开的说明正文/)
 })
+
+test('markdownToEmailHtml renders code fences as preformatted blocks', () => {
+  const markdown = [
+    '  ```ts',
+    'const value = 1 < 2',
+    '  ```',
+  ].join('\n')
+
+  const html = markdownToEmailHtml(markdown)
+
+  assert.match(html, /<pre[^>]*>[\s\S]*<code[^>]*>const value = 1 &lt; 2/)
+})
+
+test('markdownToEmailHtml renders markdown tables with alignment', () => {
+  const markdown = [
+    '| 名称 | 数量 | 备注 |',
+    '| :--- | ---: | :-: |',
+    '| Apple | 2 | `ok` |',
+    '| Banana | 10 | **good** |',
+  ].join('\n')
+
+  const html = markdownToEmailHtml(markdown)
+
+  assert.match(html, /<table[^>]*>/)
+  assert.match(html, /<th[^>]*>名称<\/th>/)
+  assert.match(html, /<td[^>]*>Apple<\/td>/)
+  assert.match(html, /<code[^>]*>ok<\/code>/)
+  assert.match(html, /<strong>good<\/strong>/)
+  assert.match(html, /text-align: right/)
+  assert.match(html, /text-align: center/)
+})
+
+test('markdownToEmailHtml renders tables with empty cells', () => {
+  const markdown = [
+    '|测试|||',
+    '| ------| --| --|',
+    '||||',
+    '||||',
+  ].join('\n')
+
+  const html = markdownToEmailHtml(markdown)
+
+  assert.match(html, /<table[^>]*>/)
+  assert.match(html, /<th[^>]*>测试<\/th>/)
+  assert.match(html, /<td[^>]*><\/td>/)
+})

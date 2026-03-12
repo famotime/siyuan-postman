@@ -216,6 +216,81 @@ function parseInlineMarkdown(line: string): string {
   return parsed
 }
 
+type TableAlignment = 'left' | 'center' | 'right'
+
+function splitTableRow(line: string): string[] {
+  const trimmed = line.trim()
+  if (trimmed.length === 0) {
+    return []
+  }
+
+  const normalized = trimmed.startsWith('|') ? trimmed.slice(1) : trimmed
+  const finalLine = normalized.endsWith('|') ? normalized.slice(0, -1) : normalized
+  const cells: string[] = []
+  let buffer = ''
+
+  for (let i = 0; i < finalLine.length; i++) {
+    const char = finalLine[i]
+    if (char === '\\' && finalLine[i + 1] === '|') {
+      buffer += '|'
+      i++
+      continue
+    }
+
+    if (char === '|') {
+      cells.push(buffer.trim())
+      buffer = ''
+      continue
+    }
+
+    buffer += char
+  }
+
+  cells.push(buffer.trim())
+  return cells
+}
+
+function parseTableSeparator(line: string): TableAlignment[] | null {
+  if (!line.includes('|')) {
+    return null
+  }
+
+  const cells = splitTableRow(line)
+  if (cells.length === 0) {
+    return null
+  }
+
+  const alignments: TableAlignment[] = []
+  for (const cell of cells) {
+    const trimmed = cell.trim()
+    if (!/^:?-{1,}:?$/.test(trimmed)) {
+      return null
+    }
+
+    const starts = trimmed.startsWith(':')
+    const ends = trimmed.endsWith(':')
+    if (starts && ends) {
+      alignments.push('center')
+    }
+    else if (ends) {
+      alignments.push('right')
+    }
+    else {
+      alignments.push('left')
+    }
+  }
+
+  return alignments
+}
+
+function normalizeTableCells(cells: string[], size: number): string[] {
+  const normalized = cells.slice(0, size)
+  while (normalized.length < size) {
+    normalized.push('')
+  }
+  return normalized
+}
+
 export function markdownToEmailHtml(markdown: string): string {
   const cleanedMarkdown = sanitizeMarkdownForEmail(markdown)
   const lines = cleanedMarkdown.split('\n')
@@ -328,7 +403,7 @@ export function markdownToEmailHtml(markdown: string): string {
     const rawLine = lines[lineIndex]
     const line = rawLine.trimEnd()
 
-    if (/^```/.test(line)) {
+    if (/^\s*```/.test(line)) {
       flushParagraph()
       closeAllLists()
 
@@ -345,6 +420,73 @@ export function markdownToEmailHtml(markdown: string): string {
     if (inCodeBlock) {
       codeBuffer.push(rawLine)
       continue
+    }
+
+    const separatorAlignments = lineIndex + 1 < lines.length
+      ? parseTableSeparator(lines[lineIndex + 1])
+      : null
+    if (separatorAlignments) {
+      const headerCells = splitTableRow(line)
+      if (headerCells.length > 0) {
+        flushParagraph()
+        closeAllLists()
+
+        const bodyRows: string[][] = []
+        let cursor = lineIndex + 2
+        while (cursor < lines.length) {
+          const rowLine = lines[cursor]
+          if (rowLine.trim() === '') {
+            break
+          }
+          if (!rowLine.includes('|')) {
+            break
+          }
+          bodyRows.push(splitTableRow(rowLine))
+          cursor++
+        }
+
+        const columnCount = Math.max(
+          headerCells.length,
+          separatorAlignments.length,
+          ...bodyRows.map(row => row.length),
+        )
+
+        const normalizedAlignments: TableAlignment[] = Array.from(
+          { length: columnCount },
+          (_, index) => separatorAlignments[index] ?? 'left',
+        )
+        const normalizedHeader = normalizeTableCells(headerCells, columnCount)
+
+        htmlParts.push('<table style="width: 100%; border-collapse: collapse; margin: 0 0 12px; font-size: 14px;">')
+        htmlParts.push('<thead>')
+        htmlParts.push('<tr>')
+        normalizedHeader.forEach((cell, index) => {
+          const alignment = normalizedAlignments[index] || 'left'
+          const content = parseInlineMarkdown(cell)
+          htmlParts.push(`<th style="border: 1px solid #e5e7eb; padding: 6px 8px; text-align: ${alignment}; background: #f8fafc; font-weight: 600;">${content}</th>`)
+        })
+        htmlParts.push('</tr>')
+        htmlParts.push('</thead>')
+
+        if (bodyRows.length > 0) {
+          htmlParts.push('<tbody>')
+          for (const row of bodyRows) {
+            const normalizedRow = normalizeTableCells(row, columnCount)
+            htmlParts.push('<tr>')
+            normalizedRow.forEach((cell, index) => {
+              const alignment = normalizedAlignments[index] || 'left'
+              const content = parseInlineMarkdown(cell)
+              htmlParts.push(`<td style="border: 1px solid #e5e7eb; padding: 6px 8px; text-align: ${alignment}; vertical-align: top;">${content}</td>`)
+            })
+            htmlParts.push('</tr>')
+          }
+          htmlParts.push('</tbody>')
+        }
+
+        htmlParts.push('</table>')
+        lineIndex = cursor - 1
+        continue
+      }
     }
 
     const headingMatch = line.match(/^(#{1,6})\s+(.+)$/)
