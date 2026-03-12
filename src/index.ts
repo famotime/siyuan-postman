@@ -11,9 +11,9 @@ import PluginInfoString from '@/../plugin.json'
 import { destroy, init } from '@/main'
 import { EMAIL_CONFIG_STORAGE_KEY, bindPlugin, loadEmailConfig, useEmailConfig } from '@/composables/useEmailConfig'
 import { getDocTitle } from '@/services/siyuanApi'
-import { createApp, defineComponent, h } from 'vue'
 import SendMailDialog from '@/components/SendMailDialog.vue'
 import SettingPanel from '@/components/SettingPanel.vue'
+import { mountDialogComponent } from '@/utils/dialogMount'
 
 const { version } = PluginInfoString
 
@@ -32,6 +32,8 @@ export default class PostmanPlugin extends Plugin {
   public isBrowser: boolean
   public platform: SyFrontendTypes
   public readonly version = version
+  private docTreeMenuHandler?: (event: CustomEvent<any>) => void
+  private editorTitleMenuHandler?: (event: CustomEvent<any>) => void
 
   private get t(): Record<string, string> {
     return this.i18n as Record<string, string>
@@ -53,13 +55,19 @@ export default class PostmanPlugin extends Plugin {
       callback: (event: MouseEvent) => this.onTopBarClick(event),
     })
 
-    this.eventBus.on('open-menu-doctree', this.onDocTreeMenu.bind(this))
-    this.eventBus.on('click-editortitleicon', this.onEditorTitleMenu.bind(this))
+    this.docTreeMenuHandler = this.onDocTreeMenu.bind(this)
+    this.editorTitleMenuHandler = this.onEditorTitleMenu.bind(this)
+    this.eventBus.on('open-menu-doctree', this.docTreeMenuHandler)
+    this.eventBus.on('click-editortitleicon', this.editorTitleMenuHandler)
   }
 
   onunload() {
-    this.eventBus.off('open-menu-doctree', this.onDocTreeMenu.bind(this))
-    this.eventBus.off('click-editortitleicon', this.onEditorTitleMenu.bind(this))
+    if (this.docTreeMenuHandler) {
+      this.eventBus.off('open-menu-doctree', this.docTreeMenuHandler)
+    }
+    if (this.editorTitleMenuHandler) {
+      this.eventBus.off('click-editortitleicon', this.editorTitleMenuHandler)
+    }
     destroy()
   }
 
@@ -77,27 +85,12 @@ export default class PostmanPlugin extends Plugin {
       width: '580px',
     })
 
-    const mountEl = dialog.element.querySelector('#postman-setting-mount')
-    if (!mountEl) {
-      return
-    }
-
-    const settingApp = createApp(
-      defineComponent({
-        render: () => h(SettingPanel, { i18n: this.t }),
-      }),
-    )
-
-    settingApp.mount(mountEl)
-
-    const observer = new MutationObserver(() => {
-      if (!document.body.contains(dialog.element)) {
-        settingApp.unmount()
-        observer.disconnect()
-      }
+    mountDialogComponent({
+      dialog,
+      mountId: 'postman-setting-mount',
+      component: SettingPanel,
+      props: { i18n: this.t },
     })
-
-    observer.observe(document.body, { childList: true, subtree: true })
   }
 
   private getCurrentDocId(): string {
@@ -185,36 +178,21 @@ export default class PostmanPlugin extends Plugin {
       width: '520px',
     })
 
-    const mountEl = dialog.element.querySelector('#postman-send-mount')
-    if (!mountEl) {
-      return
-    }
-
-    const sendApp = createApp(
-      defineComponent({
-        render: () => h(SendMailDialog, {
-          docId,
-          docTitle,
-          mode,
-          i18n: this.t,
-          onCancel: () => dialog.destroy(),
-          onSuccess: () => {
-            showMessage(this.t.dialogSuccess || '邮件发送成功！', 3000, 'info')
-            dialog.destroy()
-          },
-        }),
-      }),
-    )
-
-    sendApp.mount(mountEl)
-
-    const observer = new MutationObserver(() => {
-      if (!document.body.contains(dialog.element)) {
-        sendApp.unmount()
-        observer.disconnect()
-      }
+    mountDialogComponent({
+      dialog,
+      mountId: 'postman-send-mount',
+      component: SendMailDialog,
+      props: {
+        docId,
+        docTitle,
+        mode,
+        i18n: this.t,
+        onCancel: () => dialog.destroy(),
+        onSuccess: () => {
+          showMessage(this.t.dialogSuccess || '邮件发送成功！', 3000, 'info')
+          dialog.destroy()
+        },
+      },
     })
-
-    observer.observe(document.body, { childList: true, subtree: true })
   }
 }

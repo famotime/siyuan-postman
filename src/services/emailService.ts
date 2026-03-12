@@ -6,7 +6,7 @@
 import { normalizeEmailConfig } from '@/composables/useEmailConfig'
 import type { EmailConfig } from '@/composables/useEmailConfig'
 import PluginInfoString from '@/../plugin.json'
-import JSZip from 'jszip'
+import { composeAttachmentEmail, composeBodyEmail } from './emailComposer'
 
 /** 发送模式 */
 export type SendMode = 'body' | 'attachment'
@@ -112,101 +112,24 @@ export async function sendEmail(options: SendEmailOptions): Promise<void> {
 
   if (mode === 'body') {
     // 正文模式：处理 HTML 内容并提取内嵌图片
-    let finalHtml = htmlContent || '<p>（无内容）</p>'
-    const attachmentsConfig: any[] = []
-    let cidCounter = 0
-    const assetMap = new Map<string, string>() // assetPath -> cid
-
-    finalHtml = finalHtml.replace(/src="(assets\/[^"]+)"/g, (fullMatch, assetPath) => {
-      // 避免重复加载同一张图片
-      if (assetMap.has(assetPath)) {
-        return `src="cid:${assetMap.get(assetPath)}"`
-      }
-      
-      const absPath = getWorkspacePath(assetPath)
-      if (fs.existsSync(absPath)) {
-        const cid = `img_${cidCounter++}@siyuan.postman`
-        assetMap.set(assetPath, cid)
-        attachmentsConfig.push({
-          filename: path.basename(assetPath),
-          path: absPath,
-          cid: cid
-        })
-        return `src="cid:${cid}"`
-      }
-      // 文件不存在则保留原样
-      return fullMatch
-    })
-
+    const { html, attachments } = composeBodyEmail(htmlContent, { fs, path, getWorkspacePath })
     mailOptions = {
       from: fromAddress,
       to: to.join(', '),
       subject,
-      html: finalHtml,
-      attachments: attachmentsConfig.length > 0 ? attachmentsConfig : undefined,
+      html,
+      attachments: attachments.length > 0 ? attachments : undefined,
     }
   }
   else {
     // 附件模式：将 Markdown 和图片打包为 .zip，或者仅发送 .md（无图片时）
-    const attachContent = mdContent || ''
-    const safeTitle = docTitle.replace(/[\\/:*?"<>|]/g, '_')
-    
-    // 找出所有图片引用
-    const allAssets = new Set<string>()
-    const mdImgRegex = /!\[.*?\]\((assets\/[^)]+)\)/g
-    const htmlImgRegex = /src="(assets\/[^"]+)"/g
-    let match
-    
-    while ((match = mdImgRegex.exec(attachContent)) !== null) {
-      allAssets.add(match[1])
-    }
-    while ((match = htmlImgRegex.exec(attachContent)) !== null) {
-      allAssets.add(match[1])
-    }
-
-    if (allAssets.size > 0) {
-      // 需要打包 zip
-      const zip = new JSZip()
-      zip.file(`${safeTitle}.md`, attachContent)
-
-      
-      for (const assetPath of allAssets) {
-        const absPath = getWorkspacePath(assetPath)
-        if (fs.existsSync(absPath)) {
-          zip.file(assetPath, fs.readFileSync(absPath))
-        }
-      }
-
-      const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' })
-      mailOptions = {
-        from: fromAddress,
-        to: to.join(', '),
-        subject,
-        text: `请查阅附件：${safeTitle}.zip`,
-        attachments: [
-          {
-            filename: `${safeTitle}.zip`,
-            content: zipBuffer,
-            contentType: 'application/zip',
-          },
-        ],
-      }
-    }
-    else {
-      // 无图片仅发 .md
-      mailOptions = {
-        from: fromAddress,
-        to: to.join(', '),
-        subject,
-        text: `请查阅附件：${safeTitle}.md`,
-        attachments: [
-          {
-            filename: `${safeTitle}.md`,
-            content: attachContent,
-            contentType: 'text/markdown; charset=utf-8',
-          },
-        ],
-      }
+    const { text, attachments } = await composeAttachmentEmail(docTitle, mdContent, { fs, path, getWorkspacePath })
+    mailOptions = {
+      from: fromAddress,
+      to: to.join(', '),
+      subject,
+      text,
+      attachments,
     }
   }
 

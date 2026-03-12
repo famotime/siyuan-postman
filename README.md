@@ -9,7 +9,7 @@
 ## 功能特性
 
 - 📧 **作为正文发 Email** — 将文档渲染为 HTML 格式发送
-- 📎 **作为附件发 Email** — 将文档导出为 `.md` 文件作为附件发送
+- 📎 **作为附件发 Email** — 将文档导出为 `.md` 文件发送，含资源时自动打包 `.zip`
 - ⚙️ **预置常用邮箱** — QQ 邮箱、163 邮箱、189 邮箱、139 邮箱、Gmail
 
 ## 运行要求
@@ -57,3 +57,10 @@
 ![image](https://raw.githubusercontent.com/famotime/siyuan-postman/main/assets/image-20260311195335-fo7n0qt.png)
 
 ![image-20260307134302551](https://raw.githubusercontent.com/famotime/siyuan-postman/main/assets/image-20260307134302551-20260307134820-elngq5o.png)
+
+## 开发与构建
+
+- `pnpm install` 安装依赖
+- `pnpm dev` 监听构建到本地思源插件目录（需在 `.env` 中配置 `VITE_SIYUAN_WORKSPACE_PATH`）
+- `pnpm build` 生成生产构建到 `dist/`，并重新打包 `package.zip`
+- `pnpm release:patch`/`release:minor`/`release:major` 通过 `release.js` 升级版本并打包发布
