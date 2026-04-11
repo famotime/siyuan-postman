@@ -30,7 +30,6 @@ function stripKramdownInlineAttribute(line: string): string {
   cleaned = cleaned
     .replace(/\(\(([0-9A-Za-z-]+)\s+"([^"]*)"\)\)/g, '$2')
     .replace(/\(\(([0-9A-Za-z-]+)\s+'([^']*)'\)\)/g, '$2')
-    .replace(/(^|[^!])\[([^\]]+)\]\(([^)\n]+)\)/g, '$1$2')
 
   return cleaned
 }

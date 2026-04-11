@@ -82,3 +82,14 @@ test('composeAttachmentEmail sends markdown file when no assets are referenced',
   assert.equal(result.attachments[0].content, markdown)
   assert.equal(result.attachments[0].contentType, 'text/markdown; charset=utf-8')
 })
+
+test('composeAttachmentEmail keeps markdown links in exported attachment', async () => {
+  const markdown = '更多参考：[OpenAI](https://openai.com/)'
+  const deps = createDeps()
+
+  const result = await composeAttachmentEmail('Linked Doc', markdown, deps)
+
+  assert.equal(result.attachments.length, 1)
+  assert.equal(result.attachments[0].filename, 'Linked Doc.md')
+  assert.equal(result.attachments[0].content, markdown)
+})

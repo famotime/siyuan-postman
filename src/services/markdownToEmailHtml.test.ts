@@ -60,14 +60,14 @@ test('markdownToEmailHtml keeps nested list hierarchy when list items are separa
   assert.match(html, /<ul[^>]*>[\s\S]*<li[^>]*>一级项[\s\S]*<ul[^>]*>[\s\S]*<li[^>]*>二级项 A[\s\S]*<ul[^>]*>[\s\S]*三级项 A-1[\s\S]*<\/ul>[\s\S]*<\/li>[\s\S]*<li[^>]*>二级项 B[\s\S]*<\/li>[\s\S]*<\/ul>[\s\S]*<\/li>/)
 })
 
-test('markdownToEmailHtml keeps link text but removes clickable targets', () => {
+test('markdownToEmailHtml renders markdown links as clickable anchors', () => {
   const markdown = '参考链接：[OpenAI 官方站点](https://openai.com/)'
 
   const html = markdownToEmailHtml(markdown)
 
   assert.match(html, /OpenAI 官方站点/)
-  assert.doesNotMatch(html, /https:\/\/openai\.com/)
-  assert.doesNotMatch(html, /<a\s+href=/)
+  assert.match(html, /https:\/\/openai\.com\//)
+  assert.match(html, /<a\s+href="https:\/\/openai\.com\/"/)
 })
 
 test('sanitizeMarkdownForEmail removes backlink sections', () => {
@@ -150,19 +150,17 @@ test('sanitizeMarkdownForEmail keeps user-authored "反向链接文档" section 
   assert.match(sanitized, /## 反向链接文档/)
   assert.match(sanitized, /Cloudflare官方出手!OpenClaw 云端部署保姆级教程/)
   assert.match(sanitized, /鹿导：开箱即用：9个OpenClaw\+飞书 Skills自动化 \*\*\*/)
-  assert.doesNotMatch(sanitized, /siyuan:\/\/blocks/)
-  assert.doesNotMatch(sanitized, /20260215060020-fivungd/)
+  assert.match(sanitized, /\[Cloudflare官方出手!OpenClaw 云端部署保姆级教程\]\(siyuan:\/\/blocks\/20260207090016-xosnajd\)/)
 })
 
-test('sanitizeMarkdownForEmail keeps block-ref visible text but removes ref target', () => {
+test('sanitizeMarkdownForEmail keeps standard markdown links while removing block-ref target', () => {
   const markdown = '关联块：((20200813131152-0wk5akh "在内容块中遨游"))，更多参考：[OpenAI](https://openai.com)'
 
   const sanitized = sanitizeMarkdownForEmail(markdown)
 
   assert.match(sanitized, /关联块：在内容块中遨游/)
-  assert.match(sanitized, /更多参考：OpenAI/)
+  assert.match(sanitized, /更多参考：\[OpenAI\]\(https:\/\/openai\.com\)/)
   assert.doesNotMatch(sanitized, /20200813131152-0wk5akh/)
-  assert.doesNotMatch(sanitized, /https:\/\/openai\.com/)
 })
 
 test('sanitizeMarkdownForEmail removes backlink footnote sections and linked footnote documents', () => {
