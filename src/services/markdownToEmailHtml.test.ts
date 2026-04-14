@@ -70,6 +70,35 @@ test('markdownToEmailHtml renders markdown links as clickable anchors', () => {
   assert.match(html, /<a\s+href="https:\/\/openai\.com\/"/)
 })
 
+test('markdownToEmailHtml consumes markdown escapes for literal punctuation', () => {
+  const markdown = [
+    'co\\_await 会挂起协程。',
+    'co\\_yield 会把值传回调用者。',
+    'co\\_return 会结束协程。',
+    '可以写成 promise\\_type。',
+    '转义波浪号：\\~tilde\\~。',
+    '转义问号：escaped\\?',
+    '转义方括号：\\[text\\]。',
+  ].join('\n')
+
+  const html = markdownToEmailHtml(markdown)
+
+  assert.match(html, /promise_type/)
+  assert.match(html, /co_await/)
+  assert.match(html, /co_yield/)
+  assert.match(html, /co_return/)
+  assert.match(html, /~tilde~/)
+  assert.match(html, /escaped\?/)
+  assert.match(html, /\[text\]/)
+  assert.doesNotMatch(html, /promise\\_type/)
+  assert.doesNotMatch(html, /co\\_await/)
+  assert.doesNotMatch(html, /co\\_yield/)
+  assert.doesNotMatch(html, /co\\_return/)
+  assert.doesNotMatch(html, /\\~tilde\\~/)
+  assert.doesNotMatch(html, /escaped\\\?/)
+  assert.doesNotMatch(html, /\\\[text\\\]/)
+})
+
 test('sanitizeMarkdownForEmail removes backlink sections', () => {
   const markdown = [
     '# 正文标题',

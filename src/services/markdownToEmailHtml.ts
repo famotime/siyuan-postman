@@ -190,11 +190,19 @@ export function sanitizeMarkdownForEmail(markdown: string): string {
 
 function parseInlineMarkdown(line: string): string {
   const codeTokens: string[] = []
+  const escapedCharTokens: string[] = []
   let tokenIndex = 0
 
   let parsed = line.replace(/`([^`]+)`/g, (_, code: string) => {
     const token = `@@CODE_TOKEN_${tokenIndex++}@@`
     codeTokens.push(`<code style="font-family: Consolas, monospace; background: #f4f6f8; border-radius: 4px; padding: 2px 6px;">${escapeHtml(code)}</code>`)
+    return token
+  })
+
+  // CommonMark allows backslash escapes for ASCII punctuation characters.
+  parsed = parsed.replace(/\\([!-\/:-@\[-`{-~])/g, (_, escapedChar: string) => {
+    const token = `@@ESCAPED_CHAR_${escapedCharTokens.length}@@`
+    escapedCharTokens.push(escapeHtml(escapedChar))
     return token
   })
 
@@ -210,6 +218,9 @@ function parseInlineMarkdown(line: string): string {
 
   for (let i = 0; i < codeTokens.length; i++) {
     parsed = parsed.replace(`@@CODE_TOKEN_${i}@@`, codeTokens[i])
+  }
+  for (let i = 0; i < escapedCharTokens.length; i++) {
+    parsed = parsed.replace(`@@ESCAPED_CHAR_${i}@@`, escapedCharTokens[i])
   }
 
   return parsed
