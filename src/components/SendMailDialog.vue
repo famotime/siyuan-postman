@@ -3,13 +3,61 @@
     <div class="postman-form">
       <label class="postman-field">
         <span class="postman-field__label">{{ i18n.dialogTo }}</span>
-        <input
-          v-model="toInput"
-          class="b3-text-field postman-control"
-          type="email"
-          multiple
-          :placeholder="i18n.dialogToPlaceholder"
-        >
+        <div class="postman-recipient-wrap">
+          <div
+            class="postman-recipient-input"
+            @click="focusRecipientInput"
+          >
+            <span
+              v-for="email in selectedRecipients"
+              :key="email"
+              class="postman-recipient-tag"
+            >
+              {{ email }}
+              <button
+                type="button"
+                class="postman-recipient-tag__remove"
+                @mousedown.prevent.stop
+                @click.stop="removeRecipient(email)"
+              >
+                ×
+              </button>
+            </span>
+            <input
+              ref="recipientInputRef"
+              v-model="recipientDraft"
+              class="postman-recipient-input__field"
+              type="text"
+              :placeholder="selectedRecipients.length ? '' : i18n.dialogToPlaceholder"
+              @focus="showRecipientDropdown = true"
+              @blur="hideRecipientDropdown"
+              @keydown.enter.prevent="commitRecipientDraft"
+              @keydown.,.prevent="commitRecipientDraft"
+              @keydown.backspace="handleRecipientBackspace"
+            >
+            <button
+              type="button"
+              class="postman-select-wrap__arrow"
+              tabindex="-1"
+              aria-hidden="true"
+              @mousedown.prevent="toggleRecipientDropdown"
+            />
+          </div>
+          <div
+            v-if="showRecipientDropdown && availableRecentRecipients.length"
+            class="postman-recipient-dropdown"
+          >
+            <button
+              v-for="email in availableRecentRecipients"
+              :key="email"
+              type="button"
+              class="postman-recipient-dropdown__item"
+              @mousedown.prevent="addRecipient(email)"
+            >
+              {{ email }}
+            </button>
+          </div>
+        </div>
       </label>
 
       <label class="postman-field">
@@ -23,25 +71,27 @@
 
       <label class="postman-field">
         <span class="postman-field__label">{{ t('dialogAccountLabel', '发件账号') }}</span>
-        <select
-          v-model="selectedAccountId"
-          class="b3-select postman-control postman-account-select"
-          :disabled="!accountOptions.length"
-        >
-          <option
-            v-if="!accountOptions.length"
-            value=""
+        <div class="postman-select-wrap">
+          <select
+            v-model="selectedAccountId"
+            class="b3-select postman-control postman-account-select"
+            :disabled="!accountOptions.length"
           >
-            {{ t('dialogAccountEmpty', '尚未配置邮箱') }}
-          </option>
-          <option
-            v-for="option in accountOptions"
-            :key="option.id"
-            :value="option.id"
-          >
-            {{ option.label }}
-          </option>
-        </select>
+            <option
+              v-if="!accountOptions.length"
+              value=""
+            >
+              {{ t('dialogAccountEmpty', '尚未配置邮箱') }}
+            </option>
+            <option
+              v-for="option in accountOptions"
+              :key="option.id"
+              :value="option.id"
+            >
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
       </label>
 
       <div class="postman-provider-badge">
@@ -128,6 +178,7 @@
 <script setup lang="ts">
 import { EMAIL_PRESET_ICONS } from '@/assets/preset-icons'
 import { saveEmailConfig, setActiveEmailConfig, useEmailConfig } from '@/composables/useEmailConfig'
+import { initRecentRecipients, addRecentRecipients, getRecentRecipients } from '@/composables/useRecentRecipients'
 import type { SendMode } from '@/services/emailService'
 import { sendEmail } from '@/services/emailService'
 import { sanitizeMarkdownForEmail } from '@/services/markdownToEmailHtml'
@@ -192,12 +243,73 @@ const activeAccount = computed(() => {
   return current || configState.value.accounts[0] || null
 })
 
-const toInput = ref(activeAccount.value?.lastTo || '')
+const recipientInputRef = ref<HTMLInputElement | null>(null)
+const selectedRecipients = ref<string[]>([])
+const recipientDraft = ref('')
 const subject = ref(props.docTitle)
 const localMode = ref<SendMode>(props.mode)
 const sending = ref(false)
 const statusMsg = ref('')
 const statusType = ref<'success' | 'error'>('success')
+const showRecipientDropdown = ref(false)
+const recentRecipients = ref<string[]>(getRecentRecipients())
+initRecentRecipients().then(list => { recentRecipients.value = list })
+
+const availableRecentRecipients = computed(() =>
+  recentRecipients.value.filter(email => !selectedRecipients.value.includes(email)),
+)
+
+function focusRecipientInput() {
+  recipientInputRef.value?.focus()
+}
+
+function hideRecipientDropdown() {
+  window.setTimeout(() => {
+    showRecipientDropdown.value = false
+  }, 150)
+}
+
+function toggleRecipientDropdown() {
+  showRecipientDropdown.value = !showRecipientDropdown.value
+}
+
+function addRecipient(email: string) {
+  const trimmed = email.trim()
+  if (trimmed && !selectedRecipients.value.includes(trimmed)) {
+    selectedRecipients.value = [...selectedRecipients.value, trimmed]
+  }
+  recipientDraft.value = ''
+  showRecipientDropdown.value = false
+}
+
+function removeRecipient(email: string) {
+  selectedRecipients.value = selectedRecipients.value.filter(item => item !== email)
+}
+
+function commitRecipientDraft() {
+  const emails = recipientDraft.value
+    .split(/[，,]/)
+    .map(item => item.trim())
+    .filter(Boolean)
+  for (const email of emails) {
+    if (!selectedRecipients.value.includes(email)) {
+      selectedRecipients.value = [...selectedRecipients.value, email]
+    }
+  }
+  recipientDraft.value = ''
+}
+
+function handleRecipientBackspace() {
+  if (!recipientDraft.value && selectedRecipients.value.length) {
+    selectedRecipients.value = selectedRecipients.value.slice(0, -1)
+  }
+}
+
+watch(recipientDraft, (value, oldValue) => {
+  if (value.length > oldValue.length && /[，,]/.test(value)) {
+    commitRecipientDraft()
+  }
+})
 
 const providerBadge = computed(() => {
   const config = activeAccount.value
@@ -239,28 +351,24 @@ const configReady = computed(() => {
   return Boolean(config?.host && config?.user && config?.password)
 })
 
-const canSend = computed(() => toInput.value.trim().length > 0)
+const canSend = computed(() => selectedRecipients.value.length > 0)
 
 watch(() => props.mode, (value) => {
   localMode.value = value
 })
 
 watch(() => activeAccount.value?.lastTo, (value) => {
-  if (!toInput.value.trim() && value) {
-    toInput.value = value
+  if (!selectedRecipients.value.length && value) {
+    selectedRecipients.value = value
+      .split(/[，,]/)
+      .map(email => email.trim())
+      .filter(Boolean)
   }
 }, { immediate: true })
 
-function parseRecipientList(input: string): string[] {
-  return input
-    .split(/[，,]/)
-    .map(email => email.trim())
-    .filter(Boolean)
-}
-
 async function handleSend() {
   statusMsg.value = ''
-  const toList = parseRecipientList(toInput.value)
+  const toList = selectedRecipients.value.slice()
 
   if (!toList.length) {
     return
@@ -298,7 +406,7 @@ async function handleSend() {
     })
 
     const lastToValue = toList.join(', ')
-    toInput.value = lastToValue
+    recentRecipients.value = addRecentRecipients(toList)
     try {
       await saveEmailConfig({
         ...config,
@@ -461,5 +569,121 @@ async function handleSend() {
   position: absolute;
   opacity: 0;
   pointer-events: none;
+}
+
+.postman-recipient-wrap {
+  position: relative;
+}
+
+.postman-recipient-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 4px 34px 4px 10px;
+  box-sizing: border-box;
+  border-radius: var(--pm-radius-md);
+  border: 1px solid var(--pm-border);
+  background: var(--pm-field-bg);
+  cursor: text;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: var(--pm-border-strong);
+  }
+
+  &:focus-within {
+    outline: none;
+    border-color: color-mix(in srgb, var(--pm-accent) 46%, var(--pm-border) 54%);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--pm-accent) 12%, transparent);
+  }
+
+  &__field {
+    flex: 1;
+    min-width: 80px;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--pm-text);
+    font-size: 14px;
+    line-height: 28px;
+    padding: 0;
+
+    &::placeholder {
+      color: var(--pm-text-muted);
+    }
+  }
+}
+
+.postman-recipient-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px 2px 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--pm-accent) 10%, transparent);
+  color: var(--pm-text);
+  font-size: 13px;
+  line-height: 20px;
+  max-width: 100%;
+  word-break: break-all;
+
+  &__remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--pm-text-muted);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0;
+    transition: background 0.12s ease, color 0.12s ease;
+
+    &:hover {
+      background: color-mix(in srgb, var(--pm-danger) 15%, transparent);
+      color: var(--pm-danger);
+    }
+  }
+}
+
+.postman-recipient-dropdown {
+  position: absolute;
+  z-index: 10;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 160px;
+  overflow-y: auto;
+  margin-top: 4px;
+  padding: 4px;
+  border: 1px solid var(--pm-border);
+  border-radius: var(--pm-radius-md);
+  background: var(--pm-surface-elevated);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+  &__item {
+    display: block;
+    width: 100%;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--pm-text);
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.12s ease;
+
+    &:hover {
+      background: color-mix(in srgb, var(--pm-accent) 8%, transparent);
+    }
+  }
 }
 </style>

@@ -135,6 +135,10 @@ const emailConfig = ref<EmailConfigState>(normalizeEmailConfigState())
 
 let pluginRef: Plugin | null = null
 
+export function getPluginRef(): Plugin | null {
+  return pluginRef
+}
+
 /**
  * 绑定插件实例（用于 loadData/saveData）
  */

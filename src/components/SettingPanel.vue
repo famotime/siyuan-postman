@@ -4,21 +4,23 @@
       <div class="postman-field">
         <span class="postman-field__label">{{ t('settingAccount', '发件账号') }}</span>
         <div class="postman-account-row">
-          <select
-            v-model="selectedId"
-            class="b3-select postman-control postman-account-select"
-          >
-            <option
-              v-for="option in accountOptions"
-              :key="option.id"
-              :value="option.id"
+          <div class="postman-select-wrap">
+            <select
+              v-model="selectedId"
+              class="b3-select postman-control postman-account-select"
             >
-              {{ option.label }}
-            </option>
-            <option :value="NEW_ACCOUNT_KEY">
-              {{ t('settingAccountNew', '新增账号') }}
-            </option>
-          </select>
+              <option
+                v-for="option in accountOptions"
+                :key="option.id"
+                :value="option.id"
+              >
+                {{ option.label }}
+              </option>
+              <option :value="NEW_ACCOUNT_KEY">
+                ＋ {{ t('settingAccountNew', '新增账号') }}
+              </option>
+            </select>
+          </div>
           <button
             type="button"
             class="b3-button postman-btn postman-btn--ghost"

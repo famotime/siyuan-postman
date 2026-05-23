@@ -13,7 +13,7 @@ test('dialog uses last successful recipients as default and persists them on suc
   const source = readFileSync(new URL('./SendMailDialog.vue', import.meta.url), 'utf8')
 
   assert.match(source, /import\s+\{[^}]*saveEmailConfig[^}]*useEmailConfig[^}]*\}\s+from\s+['"]@\/composables\/useEmailConfig['"]/)
-  assert.match(source, /const\s+toInput\s*=\s*ref\(activeAccount\.value\?\.lastTo\s*\|\|\s*''\)/)
+  assert.match(source, /const\s+selectedRecipients\s*=\s*ref<string\[\]>\(\[\]\)/)
   assert.match(source, /watch\(\(\)\s*=>\s*activeAccount\.value\?\.lastTo,\s*\(value\)\s*=>\s*\{/)
   assert.match(source, /const\s+lastToValue\s*=\s*toList\.join\(', '\)/)
   assert.match(source, /await\s+saveEmailConfig\(\{\s*\.\.\.config,\s*lastTo:\s*lastToValue,\s*hasSentSuccessfully:\s*true,\s*\}\)/)
@@ -22,9 +22,9 @@ test('dialog uses last successful recipients as default and persists them on suc
 test('dialog parses recipients with both Chinese and English commas', () => {
   const source = readFileSync(new URL('./SendMailDialog.vue', import.meta.url), 'utf8')
 
-  assert.match(source, /function\s+parseRecipientList\s*\(input:\s*string\)/)
+  assert.match(source, /function\s+commitRecipientDraft\s*\(\)/)
   assert.match(source, /\.split\(\/\[，,\]\/\)/)
-  assert.match(source, /const\s+toList\s*=\s*parseRecipientList\(toInput\.value\)/)
+  assert.match(source, /const\s+toList\s*=\s*selectedRecipients\.value\.slice\(\)/)
 })
 
 test('dialog renders current provider badge with preset icon', () => {
