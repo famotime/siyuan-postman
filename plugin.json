@@ -2,7 +2,7 @@
   "name": "siyuan-postman",
   "author": "QuincyZou",
   "url": "https://github.com/famotime/siyuan-postman",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "minAppVersion": "2.10.14",
   "backends": [
     "all"
@@ -15,8 +15,8 @@
     "en_US": "Postman - Send Doc as Email"
   },
   "description": {
-    "default": "通过 SMTP 将思源笔记文档一键发送为邮件（正文或附件），预置支持 QQ、163、189、139 等常用邮箱。",
-    "en_US": "Send SiYuan documents as email (body or attachment) via SMTP. Supports QQ, 163, 189, 139 and custom SMTP providers."
+    "default": "将思源笔记文档一键发送为邮件（正文或附件），预置支持 QQ、163、189、139 等常用邮箱。",
+    "en_US": "Send SiYuan documents as email (body or attachment). Supports QQ, 163, 189, 139 and custom providers."
   },
   "readme": {
     "default": "README.md"
