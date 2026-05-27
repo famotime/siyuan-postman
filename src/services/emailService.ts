@@ -1,12 +1,12 @@
 /**
  * 邮件发送服务
- * 在 Electron 环境下通过 nodemailer + SMTP 发送邮件
- * nodemailer 以静态 import 方式引入，由 Rollup + @rollup/plugin-commonjs 打包进 bundle
+ * 自动选择后端：桌面端走 SMTP (nodemailer)，移动端走 HTTP API (Resend)
  */
 import { normalizeEmailConfig } from '@/composables/useEmailConfig'
 import type { EmailConfig } from '@/composables/useEmailConfig'
 import PluginInfoString from '@/../plugin.json'
 import { composeAttachmentEmail, composeBodyEmail } from './emailComposer'
+import { sendEmailViaHttp, type HttpEmailConfig } from './httpEmailService'
 
 /** 发送模式 */
 export type SendMode = 'body' | 'attachment'
@@ -14,6 +14,7 @@ export type SendMode = 'body' | 'attachment'
 /** 发送参数 */
 export interface SendEmailOptions {
   config: EmailConfig
+  httpConfig?: HttpEmailConfig
   to: string[]         // 收件人列表
   subject: string      // 邮件主题
   mode: SendMode
@@ -24,7 +25,6 @@ export interface SendEmailOptions {
 
 /**
  * 检测是否在 Electron 环境运行
- * 使用 process.versions.electron 进行可靠判断
  */
 function isElectronEnv(): boolean {
   try {
@@ -40,9 +40,7 @@ function isElectronEnv(): boolean {
 }
 
 /**
- * 动态加载 Node 模块
- * 在 Electron 的沙盒环境中（electron/js2c/renderer_init），__dirname 实际上指向了 electron 内部资源。
- * 必须通过 window.siyuan.config.system.workspaceDir 拿到思源工作空间的绝对物理路径，结合插件目录精准 require。
+ * 动态加载 Node 模块（仅桌面端）
  */
 function requireNodeModule(moduleName: string): any {
   if (!isElectronEnv()) {
@@ -52,7 +50,6 @@ function requireNodeModule(moduleName: string): any {
     if (moduleName === 'fs' || moduleName === 'path') {
       return (window as any).require(moduleName)
     }
-    // 获取真正的 NodeJS API
     const path = (window as any).require('path')
     const wsDir = (window as any).siyuan.config.system.workspaceDir
     const pluginName = PluginInfoString.name || 'siyuan-postman'
@@ -65,7 +62,7 @@ function requireNodeModule(moduleName: string): any {
 }
 
 /**
- * 获取思源 assets 目录物理路径
+ * 获取思源 assets 目录物理路径（桌面端）
  */
 function getWorkspacePath(relativePath: string): string {
   const path = requireNodeModule('path')
@@ -74,23 +71,20 @@ function getWorkspacePath(relativePath: string): string {
 }
 
 /**
- * 发送邮件（核心函数）
+ * 通过 SMTP 发送邮件（桌面端）
  */
-export async function sendEmail(options: SendEmailOptions): Promise<void> {
+async function sendEmailViaSmtp(options: SendEmailOptions): Promise<void> {
   const { config, to, subject, mode, docTitle, htmlContent, mdContent } = options
   const normalizedConfig = normalizeEmailConfig(config)
 
-  // 非 Electron 环境（浏览器）无法使用 SMTP
   const nodemailer = requireNodeModule('nodemailer')
   const fs = requireNodeModule('fs')
   const path = requireNodeModule('path')
 
-  // 校验配置完整性
   if (!normalizedConfig.host || !normalizedConfig.user || !normalizedConfig.password) {
     throw new Error('NO_CONFIG')
   }
 
-  // 创建 SMTP 传输
   const transporter = nodemailer.createTransport({
     host: normalizedConfig.host,
     port: normalizedConfig.port,
@@ -99,7 +93,6 @@ export async function sendEmail(options: SendEmailOptions): Promise<void> {
       user: normalizedConfig.user,
       pass: normalizedConfig.password,
     },
-    // 连接超时 15 秒
     connectionTimeout: 15000,
     greetingTimeout: 10000,
   })
@@ -111,7 +104,6 @@ export async function sendEmail(options: SendEmailOptions): Promise<void> {
   let mailOptions: any
 
   if (mode === 'body') {
-    // 正文模式：处理 HTML 内容并提取内嵌图片
     const { html, attachments } = composeBodyEmail(htmlContent, { fs, path, getWorkspacePath })
     mailOptions = {
       from: fromAddress,
@@ -122,7 +114,6 @@ export async function sendEmail(options: SendEmailOptions): Promise<void> {
     }
   }
   else {
-    // 附件模式：将 Markdown 和图片打包为 .zip，或者仅发送 .md（无图片时）
     const { text, attachments } = await composeAttachmentEmail(docTitle, mdContent, { fs, path, getWorkspacePath })
     mailOptions = {
       from: fromAddress,
@@ -133,11 +124,37 @@ export async function sendEmail(options: SendEmailOptions): Promise<void> {
     }
   }
 
-  // 发送邮件（Promise 化）
   await new Promise<void>((resolve, reject) => {
     transporter.sendMail(mailOptions, (err: Error | null) => {
       if (err) reject(err)
       else resolve()
     })
+  })
+}
+
+/**
+ * 发送邮件（自动路由）
+ * 桌面端：SMTP (nodemailer)
+ * 移动端：HTTP API (Resend)
+ */
+export async function sendEmail(options: SendEmailOptions): Promise<void> {
+  if (isElectronEnv()) {
+    return sendEmailViaSmtp(options)
+  }
+
+  // 移动端：走 HTTP API
+  if (!options.httpConfig) {
+    throw new Error('NO_HTTP_CONFIG')
+  }
+
+  return sendEmailViaHttp({
+    config: options.config,
+    httpConfig: options.httpConfig,
+    to: options.to,
+    subject: options.subject,
+    mode: options.mode,
+    docTitle: options.docTitle,
+    htmlContent: options.htmlContent,
+    mdContent: options.mdContent,
   })
 }

@@ -1,5 +1,75 @@
 <template>
   <div class="postman-setting">
+    <!-- HTTP API 配置（移动端 / 浏览器端） -->
+    <div
+      v-if="!isElectron"
+      class="postman-form postman-http-section"
+    >
+      <div class="postman-http-section__header">
+        <h3 class="postman-http-section__title">{{ t('settingHttpTitle', 'HTTP 邮件 API') }}</h3>
+        <span class="postman-http-section__badge">{{ t('settingHttpBadge', '移动端') }}</span>
+      </div>
+      <p class="postman-http-section__desc">{{ t('settingHttpDesc', '移动端通过 HTTP API 发送邮件，需配置 Resend API Key。') }}</p>
+
+      <label class="postman-field">
+        <span class="postman-field__label">{{ t('settingHttpApiKey', 'Resend API Key') }}</span>
+        <span class="postman-password-wrap">
+          <input
+            v-model="httpForm.httpApiKey"
+            class="b3-text-field postman-control postman-password-input"
+            :type="showHttpApiKey ? 'text' : 'password'"
+            placeholder="re_xxxxxxxxxx"
+          >
+          <button
+            type="button"
+            class="postman-password-toggle"
+            :aria-label="showHttpApiKey ? t('settingHidePassword', '隐藏密码') : t('settingShowPassword', '显示密码')"
+            @click="showHttpApiKey = !showHttpApiKey"
+          >
+            <svg
+              v-if="!showHttpApiKey"
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 5C7 5 3.12 8.11 1.5 12c1.62 3.89 5.5 7 10.5 7s8.88-3.11 10.5-7C20.88 8.11 17 5 12 5zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"
+                fill="currentColor"
+              />
+            </svg>
+            <svg
+              v-else
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              aria-hidden="true"
+            >
+              <path
+                d="M2.81 2.81 1.39 4.22l3.05 3.05C3.26 8.3 2.27 9.57 1.5 11c1.62 3.89 5.5 7 10.5 7 1.82 0 3.5-.41 4.98-1.13l2.8 2.8 1.41-1.41L2.81 2.81zm9.19 13.19a4 4 0 0 1-4-4c0-.54.11-1.05.3-1.51l5.21 5.21c-.46.19-.97.3-1.51.3zm0-10c5 0 8.88 3.11 10.5 7-.55 1.33-1.35 2.52-2.34 3.49l-1.43-1.43A6.95 6.95 0 0 0 19 12a7 7 0 0 0-7-7c-1.08 0-2.11.25-3.02.69L7.43 4.14A10.9 10.9 0 0 1 12 6z"
+                fill="currentColor"
+              />
+            </svg>
+          </button>
+        </span>
+      </label>
+
+      <label class="postman-field">
+        <span class="postman-field__label">{{ t('settingHttpEndpoint', '自定义 Endpoint（可选）') }}</span>
+        <input
+          v-model="httpForm.httpEndpoint"
+          class="b3-text-field postman-control"
+          type="text"
+          :placeholder="t('settingHttpEndpointPlaceholder', '默认使用 https://api.resend.com/emails')"
+        >
+      </label>
+
+      <div class="postman-http-section__hint">
+        <span>{{ t('settingHttpApiKeyHint', '前往 resend.com 注册获取 API Key，免费版每月 3000 封。') }}</span>
+      </div>
+    </div>
+
+    <!-- SMTP 配置（桌面端） -->
     <div class="postman-form">
       <div class="postman-field">
         <span class="postman-field__label">{{ t('settingAccount', '发件账号') }}</span>
@@ -152,6 +222,31 @@
       </label>
     </div>
 
+    <!-- HTTP API 保存按钮（移动端） -->
+    <footer
+      v-if="!isElectron"
+      class="postman-actions"
+    >
+      <div class="postman-actions__copy">
+        <p class="postman-actions__hint">{{ t('settingHttpRelayHint', 'API Key 仅保存在本地插件数据中，不会上传。') }}</p>
+        <div
+          v-if="httpSavedMsg"
+          class="postman-status postman-status--success"
+        >
+          <span class="postman-status__dot" />
+          <span>{{ httpSavedMsg }}</span>
+        </div>
+      </div>
+
+      <button
+        class="b3-button postman-btn postman-btn--primary"
+        @click="handleHttpSave"
+      >
+        {{ t('settingSave', '保存设置') }}
+      </button>
+    </footer>
+
+    <!-- SMTP 保存按钮（桌面端） -->
     <footer class="postman-actions">
       <div class="postman-actions__copy">
         <p class="postman-actions__hint">{{ t('settingRelayHint', '邮箱信息仅保存在本地插件数据中，不会上传。') }}</p>
@@ -182,8 +277,10 @@ import {
   normalizeEmailConfig,
   removeEmailConfig,
   saveEmailConfig,
+  saveHttpEmailConfig,
   setActiveEmailConfig,
   useEmailConfig,
+  useHttpEmailConfig,
 } from '@/composables/useEmailConfig'
 import { EMAIL_PRESET_UI_META, getPresetHostCaption } from '@/utils/emailPresetUi'
 import { computed, reactive, ref, watch } from 'vue'
@@ -205,6 +302,34 @@ const savedMsg = ref('')
 const showPassword = ref(false)
 
 const t = (key: string, fallback: string) => props.i18n[key] || fallback
+
+// ─── HTTP API 配置（移动端） ───
+const isElectron = (() => {
+  try {
+    return typeof process !== 'undefined' && typeof process.versions === 'object' && !!process.versions.electron
+  }
+  catch { return false }
+})()
+
+const httpConfigRef = useHttpEmailConfig()
+const httpForm = reactive({
+  httpApiKey: httpConfigRef.value.httpApiKey,
+  httpEndpoint: httpConfigRef.value.httpEndpoint,
+})
+const showHttpApiKey = ref(false)
+const httpSavedMsg = ref('')
+
+async function handleHttpSave() {
+  await saveHttpEmailConfig({
+    httpProvider: 'resend',
+    httpApiKey: httpForm.httpApiKey,
+    httpEndpoint: httpForm.httpEndpoint,
+  })
+  httpSavedMsg.value = t('settingSaveSuccess', '设置已保存')
+  window.setTimeout(() => {
+    httpSavedMsg.value = ''
+  }, 2500)
+}
 
 const accountOptions = computed(() => {
   return configRef.value.accounts.map(account => ({
@@ -435,6 +560,48 @@ async function handleRemove() {
   &:hover {
     background: color-mix(in srgb, var(--pm-accent) 10%, transparent);
     color: var(--pm-text-secondary);
+  }
+}
+
+.postman-http-section {
+  padding-bottom: 16px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--pm-border);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  &__title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--pm-text);
+    margin: 0;
+  }
+
+  &__badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--pm-accent) 12%, transparent);
+    color: var(--pm-accent);
+    font-weight: 600;
+  }
+
+  &__desc {
+    font-size: 13px;
+    color: var(--pm-text-secondary);
+    margin: 0 0 12px;
+    line-height: 1.5;
+  }
+
+  &__hint {
+    font-size: 12px;
+    color: var(--pm-text-muted);
+    margin-top: 4px;
   }
 }
 

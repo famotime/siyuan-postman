@@ -69,42 +69,53 @@
         >
       </label>
 
-      <label class="postman-field">
-        <span class="postman-field__label">{{ t('dialogAccountLabel', '发件账号') }}</span>
-        <div class="postman-select-wrap">
-          <select
-            v-model="selectedAccountId"
-            class="b3-select postman-control postman-account-select"
-            :disabled="!accountOptions.length"
-          >
-            <option
-              v-if="!accountOptions.length"
-              value=""
+      <template v-if="isElectron">
+        <label class="postman-field">
+          <span class="postman-field__label">{{ t('dialogAccountLabel', '发件账号') }}</span>
+          <div class="postman-select-wrap">
+            <select
+              v-model="selectedAccountId"
+              class="b3-select postman-control postman-account-select"
+              :disabled="!accountOptions.length"
             >
-              {{ t('dialogAccountEmpty', '尚未配置邮箱') }}
-            </option>
-            <option
-              v-for="option in accountOptions"
-              :key="option.id"
-              :value="option.id"
-            >
-              {{ option.label }}
-            </option>
-          </select>
-        </div>
-      </label>
+              <option
+                v-if="!accountOptions.length"
+                value=""
+              >
+                {{ t('dialogAccountEmpty', '尚未配置邮箱') }}
+              </option>
+              <option
+                v-for="option in accountOptions"
+                :key="option.id"
+                :value="option.id"
+              >
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+        </label>
 
-      <div class="postman-provider-badge">
-        <span class="postman-provider-badge__icon-shell">
-          <img
-            :src="providerBadge.iconSrc"
-            :alt="providerBadge.label"
-            class="postman-provider-badge__icon"
-          >
-        </span>
+        <div class="postman-provider-badge">
+          <span class="postman-provider-badge__icon-shell">
+            <img
+              :src="providerBadge.iconSrc"
+              :alt="providerBadge.label"
+              class="postman-provider-badge__icon"
+            >
+          </span>
+          <span class="postman-provider-badge__content">
+            <strong class="postman-provider-badge__label">{{ providerBadge.label }}</strong>
+            <span class="postman-provider-badge__secondary">{{ providerBadge.secondary }}</span>
+          </span>
+        </div>
+      </template>
+      <div
+        v-else
+        class="postman-provider-badge"
+      >
         <span class="postman-provider-badge__content">
-          <strong class="postman-provider-badge__label">{{ providerBadge.label }}</strong>
-          <span class="postman-provider-badge__secondary">{{ providerBadge.secondary }}</span>
+          <strong class="postman-provider-badge__label">{{ t('dialogHttpMode', 'HTTP API 模式') }}</strong>
+          <span class="postman-provider-badge__secondary">{{ t('dialogHttpModeDesc', '通过 Resend API 发送，可在设置中配置') }}</span>
         </span>
       </div>
 
@@ -177,7 +188,7 @@
 
 <script setup lang="ts">
 import { EMAIL_PRESET_ICONS } from '@/assets/preset-icons'
-import { saveEmailConfig, setActiveEmailConfig, useEmailConfig } from '@/composables/useEmailConfig'
+import { saveEmailConfig, setActiveEmailConfig, useEmailConfig, useHttpEmailConfig } from '@/composables/useEmailConfig'
 import { initRecentRecipients, addRecentRecipients, getRecentRecipients } from '@/composables/useRecentRecipients'
 import type { SendMode } from '@/services/emailService'
 import { sendEmail } from '@/services/emailService'
@@ -200,7 +211,15 @@ const emit = defineEmits<{
 
 const t = (key: string, fallback: string) => props.i18n[key] || fallback
 
+const isElectron = (() => {
+  try {
+    return typeof process !== 'undefined' && typeof process.versions === 'object' && !!process.versions.electron
+  }
+  catch { return false }
+})()
+
 const configState = useEmailConfig()
+const httpConfigRef = useHttpEmailConfig()
 const selectedAccountId = ref('')
 const accountOptions = computed(() => {
   return configState.value.accounts.map(account => ({
@@ -347,8 +366,11 @@ const modeOptions = computed(() => ([
 ]))
 
 const configReady = computed(() => {
-  const config = activeAccount.value
-  return Boolean(config?.host && config?.user && config?.password)
+  if (isElectron) {
+    const config = activeAccount.value
+    return Boolean(config?.host && config?.user && config?.password)
+  }
+  return Boolean(httpConfigRef.value.httpApiKey)
 })
 
 const canSend = computed(() => selectedRecipients.value.length > 0)
@@ -375,8 +397,15 @@ async function handleSend() {
   }
 
   const config = activeAccount.value
-  if (!config?.host || !config?.user || !config?.password) {
-    statusMsg.value = props.i18n.noConfigError
+  if (isElectron) {
+    if (!config?.host || !config?.user || !config?.password) {
+      statusMsg.value = props.i18n.noConfigError
+      statusType.value = 'error'
+      return
+    }
+  }
+  else if (!httpConfigRef.value.httpApiKey) {
+    statusMsg.value = t('noHttpConfigError', '请先在插件设置中配置 API Key')
     statusType.value = 'error'
     return
   }
@@ -396,7 +425,12 @@ async function handleSend() {
     }
 
     await sendEmail({
-      config,
+      config: config!,
+      httpConfig: isElectron ? undefined : {
+        httpProvider: httpConfigRef.value.httpProvider,
+        httpApiKey: httpConfigRef.value.httpApiKey,
+        httpEndpoint: httpConfigRef.value.httpEndpoint,
+      },
       to: toList,
       subject: subject.value || props.docTitle,
       mode: localMode.value,
@@ -431,6 +465,12 @@ async function handleSend() {
     }
     else if (error?.message === 'NO_CONFIG') {
       errMsg += props.i18n.noConfigError
+    }
+    else if (error?.message === 'NO_HTTP_CONFIG' || error?.message === 'NO_HTTP_API_KEY') {
+      errMsg += t('noHttpConfigError', '请先在插件设置中配置 API Key')
+    }
+    else if (error?.message?.startsWith?.('HTTP_EMAIL_')) {
+      errMsg += t('httpEmailError', '邮件 API 调用失败：') + error.message
     }
     else {
       errMsg += error?.message || String(error)

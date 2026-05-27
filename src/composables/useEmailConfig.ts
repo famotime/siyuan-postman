@@ -228,3 +228,55 @@ export async function setActiveEmailConfig(id: string): Promise<void> {
 export function useEmailConfig() {
   return emailConfig
 }
+
+// ─── HTTP 邮件 API 配置（移动端） ───
+
+export type HttpEmailProvider = 'resend'
+
+export interface HttpEmailConfigState {
+  httpProvider: HttpEmailProvider
+  httpApiKey: string
+  httpEndpoint: string
+}
+
+export const HTTP_CONFIG_STORAGE_KEY = 'postman-http-config.json'
+
+const DEFAULT_HTTP_CONFIG: HttpEmailConfigState = {
+  httpProvider: 'resend',
+  httpApiKey: '',
+  httpEndpoint: '',
+}
+
+const httpConfig = ref<HttpEmailConfigState>({ ...DEFAULT_HTTP_CONFIG })
+
+export function useHttpEmailConfig() {
+  return httpConfig
+}
+
+export async function loadHttpEmailConfig(): Promise<HttpEmailConfigState> {
+  if (!pluginRef) return { ...DEFAULT_HTTP_CONFIG }
+  try {
+    const data = await pluginRef.loadData(HTTP_CONFIG_STORAGE_KEY)
+    if (data && typeof data === 'object') {
+      httpConfig.value = {
+        httpProvider: (data as any).httpProvider === 'resend' ? 'resend' : 'resend',
+        httpApiKey: typeof (data as any).httpApiKey === 'string' ? (data as any).httpApiKey : '',
+        httpEndpoint: typeof (data as any).httpEndpoint === 'string' ? (data as any).httpEndpoint : '',
+      }
+    }
+    else {
+      httpConfig.value = { ...DEFAULT_HTTP_CONFIG }
+    }
+  }
+  catch {
+    httpConfig.value = { ...DEFAULT_HTTP_CONFIG }
+  }
+  return httpConfig.value
+}
+
+export async function saveHttpEmailConfig(config: HttpEmailConfigState): Promise<void> {
+  httpConfig.value = { ...config }
+  if (pluginRef) {
+    await pluginRef.saveData(HTTP_CONFIG_STORAGE_KEY, config)
+  }
+}

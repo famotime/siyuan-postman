@@ -8,7 +8,8 @@
     "all"
   ],
   "frontends": [
-    "desktop"
+    "desktop",
+    "mobile"
   ],
   "displayName": {
     "default": "邮递员 - 一键发送文档邮件",

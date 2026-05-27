@@ -46,5 +46,17 @@
   "presetCustom": "Custom",
   "presetCustomHint": "Enter SMTP details manually",
   "topBarTitle": "Postman",
-  "topBarNeedDoc": "Please open a document before sending email"
+  "topBarNeedDoc": "Please open a document before sending email",
+  "settingHttpTitle": "HTTP Email API",
+  "settingHttpBadge": "Mobile",
+  "settingHttpDesc": "On mobile, emails are sent via HTTP API. Configure your Resend API Key below.",
+  "settingHttpApiKey": "Resend API Key",
+  "settingHttpEndpoint": "Custom Endpoint (optional)",
+  "settingHttpEndpointPlaceholder": "Default: https://api.resend.com/emails",
+  "settingHttpApiKeyHint": "Get a free API Key at resend.com (3000 emails/month).",
+  "settingHttpRelayHint": "API Key is stored only in this plugin on the current device.",
+  "dialogHttpMode": "HTTP API Mode",
+  "dialogHttpModeDesc": "Sends via Resend API. Configure in settings.",
+  "noHttpConfigError": "Please configure API Key in plugin settings first",
+  "httpEmailError": "HTTP email API error: "
 }

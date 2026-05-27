@@ -9,7 +9,7 @@ import {
 import '@/index.scss'
 import PluginInfoString from '@/../plugin.json'
 import { destroy, init } from '@/main'
-import { EMAIL_CONFIG_STORAGE_KEY, bindPlugin, loadEmailConfig, useEmailConfig } from '@/composables/useEmailConfig'
+import { EMAIL_CONFIG_STORAGE_KEY, HTTP_CONFIG_STORAGE_KEY, bindPlugin, loadEmailConfig, loadHttpEmailConfig, useEmailConfig } from '@/composables/useEmailConfig'
 import { getDocTitle } from '@/services/siyuanApi'
 import SendMailDialog from '@/components/SendMailDialog.vue'
 import SettingPanel from '@/components/SettingPanel.vue'
@@ -47,6 +47,7 @@ export default class PostmanPlugin extends Plugin {
 
     bindPlugin(this)
     await loadEmailConfig()
+    await loadHttpEmailConfig()
     init(this)
 
     this.addTopBar({
@@ -76,6 +77,7 @@ export default class PostmanPlugin extends Plugin {
       const reason = error instanceof Error ? error.message : String((error as { msg?: string } | null)?.msg ?? error)
       showMessage(`uninstall [${this.name}] remove data [${EMAIL_CONFIG_STORAGE_KEY}] fail: ${reason}`, 3000, 'error')
     })
+    this.removeData(HTTP_CONFIG_STORAGE_KEY).catch(() => {})
   }
 
   openSetting() {

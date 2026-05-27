@@ -1,5 +1,10 @@
 import JSZip from 'jszip'
 
+export interface AssetReaderResult {
+  base64: string
+  buffer: ArrayBuffer | Buffer
+}
+
 export interface EmailComposerDeps {
   fs: {
     existsSync: (path: string) => boolean
@@ -9,6 +14,10 @@ export interface EmailComposerDeps {
     basename: (path: string) => string
   }
   getWorkspacePath: (relativePath: string) => string
+  /** 移动端异步读取资源文件 */
+  readAssetAsync?: (absPath: string) => Promise<AssetReaderResult>
+  /** 移动端异步检查资源是否存在 */
+  assetExistsAsync?: (absPath: string) => Promise<boolean>
 }
 
 export interface BodyComposeResult {
