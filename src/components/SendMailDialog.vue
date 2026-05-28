@@ -151,7 +151,7 @@
           class="postman-status postman-status--error"
         >
           <span class="postman-status__dot" />
-          <span>{{ i18n.noConfigError }}</span>
+          <span>{{ isElectron ? i18n.noConfigError : t('noHttpConfigError', '请在设置中配置 Resend API Key 信息') }}</span>
         </div>
         <div
           v-else-if="statusMsg"
@@ -305,11 +305,18 @@ function removeRecipient(email: string) {
   selectedRecipients.value = selectedRecipients.value.filter(item => item !== email)
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 function commitRecipientDraft() {
   const emails = recipientDraft.value
     .split(/[，,]/)
     .map(item => item.trim())
     .filter(Boolean)
+  const invalid = emails.filter(e => !EMAIL_RE.test(e))
+  if (invalid.length) {
+    window.alert(t('invalidEmailError', '以下邮箱地址格式不正确：') + '\n' + invalid.join('\n'))
+    return
+  }
   for (const email of emails) {
     if (!selectedRecipients.value.includes(email)) {
       selectedRecipients.value = [...selectedRecipients.value, email]
@@ -390,9 +397,17 @@ watch(() => activeAccount.value?.lastTo, (value) => {
 
 async function handleSend() {
   statusMsg.value = ''
+  commitRecipientDraft()
+
   const toList = selectedRecipients.value.slice()
 
   if (!toList.length) {
+    return
+  }
+
+  const invalidRecipients = toList.filter(e => !EMAIL_RE.test(e))
+  if (invalidRecipients.length) {
+    window.alert(t('invalidEmailError', '以下邮箱地址格式不正确：') + '\n' + invalidRecipients.join('\n'))
     return
   }
 
@@ -405,7 +420,7 @@ async function handleSend() {
     }
   }
   else if (!httpConfigRef.value.httpApiKey) {
-    statusMsg.value = t('noHttpConfigError', '请先在插件设置中配置 API Key')
+    statusMsg.value = t('noHttpConfigError', '请在设置中配置 Resend API Key 信息')
     statusType.value = 'error'
     return
   }
@@ -467,7 +482,7 @@ async function handleSend() {
       errMsg += props.i18n.noConfigError
     }
     else if (error?.message === 'NO_HTTP_CONFIG' || error?.message === 'NO_HTTP_API_KEY') {
-      errMsg += t('noHttpConfigError', '请先在插件设置中配置 API Key')
+      errMsg += t('noHttpConfigError', '请在设置中配置 Resend API Key 信息')
     }
     else if (error?.message?.startsWith?.('HTTP_EMAIL_')) {
       errMsg += t('httpEmailError', '邮件 API 调用失败：') + error.message

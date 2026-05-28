@@ -57,6 +57,7 @@
   "settingHttpRelayHint": "API Key is stored only in this plugin on the current device.",
   "dialogHttpMode": "HTTP API Mode",
   "dialogHttpModeDesc": "Sends via Resend API. Configure in settings.",
-  "noHttpConfigError": "Please configure API Key in plugin settings first",
-  "httpEmailError": "HTTP email API error: "
+  "noHttpConfigError": "Please configure Resend API Key in settings",
+  "httpEmailError": "HTTP email API error: ",
+  "invalidEmailError": "The following email addresses are invalid: "
 }
