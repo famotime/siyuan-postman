@@ -3,10 +3,10 @@
  * 通过 Resend REST API 发送邮件，不依赖 Node.js 模块
  */
 import JSZip from 'jszip'
-import { normalizeEmailConfig } from '@/composables/useEmailConfig'
-import type { EmailConfig } from '@/composables/useEmailConfig'
-import { composeAttachmentEmail, composeBodyEmail, type EmailComposerDeps } from './emailComposer'
-import { assetExists, readAsset } from './assetReader'
+import { normalizeEmailConfig } from '../composables/useEmailConfig.ts'
+import type { EmailConfig } from '../composables/useEmailConfig.ts'
+import { composeAttachmentEmail, composeBodyEmail, type EmailComposerDeps } from './emailComposer.ts'
+import { assetExists, readAsset } from './assetReader.ts'
 
 export type HttpEmailProvider = 'resend'
 
@@ -67,6 +67,67 @@ function createMobileDeps(): EmailComposerDeps {
 /**
  * 通过 Resend API 发送邮件
  */
+async function postSiyuanApi(url: string, data: unknown): Promise<any> {
+  const testFetchSyncPost = (globalThis as any).__POSTMAN_FETCH_SYNC_POST__
+  if (typeof testFetchSyncPost === 'function') {
+    return testFetchSyncPost(url, data)
+  }
+
+  const siyuan = await import('siyuan')
+  return siyuan.fetchSyncPost(url, data)
+}
+
+async function postJsonDirect(endpoint: string, apiKey: string, body: Record<string, any>): Promise<void> {
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (!res.ok) {
+    const errorBody = await res.text().catch(() => '')
+    throw new Error(`HTTP_EMAIL_${res.status}: ${errorBody}`)
+  }
+}
+
+async function postJsonViaSiyuanForwardProxy(
+  endpoint: string,
+  apiKey: string,
+  body: Record<string, any>,
+): Promise<void> {
+  const response = await postSiyuanApi('/api/network/forwardProxy', {
+    url: endpoint,
+    method: 'POST',
+    timeout: 30000,
+    contentType: 'application/json',
+    headers: [
+      { Authorization: `Bearer ${apiKey}` },
+      { 'Content-Type': 'application/json' },
+    ],
+    payload: JSON.stringify(body),
+    payloadEncoding: 'text',
+    responseEncoding: 'text',
+  })
+
+  if (response?.code !== 0) {
+    throw new Error(`HTTP_EMAIL_PROXY: ${response?.msg || 'forwardProxy failed'}`)
+  }
+
+  const status = Number(response?.data?.status || 0)
+  if (status < 200 || status >= 300) {
+    throw new Error(`HTTP_EMAIL_${status || 'PROXY'}: ${response?.data?.body || response?.msg || ''}`)
+  }
+}
+
+/**
+ * 通过 Resend API 发送邮件。
+ *
+ * 移动端 WebView 直接请求 https://api.resend.com 往往会被 CORS 拦截并抛出
+ * “Failed to fetch”，因此优先走思源内核的 /api/network/forwardProxy。
+ */
 async function sendViaResend(
   endpoint: string,
   apiKey: string,
@@ -94,18 +155,16 @@ async function sendViaResend(
     }))
   }
 
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  })
+  try {
+    await postJsonViaSiyuanForwardProxy(endpoint, apiKey, body)
+  }
+  catch (error: any) {
+    if (error?.message?.startsWith?.('HTTP_EMAIL_')) {
+      throw error
+    }
 
-  if (!res.ok) {
-    const errorBody = await res.text().catch(() => '')
-    throw new Error(`HTTP_EMAIL_${res.status}: ${errorBody}`)
+    // 兼容没有 forwardProxy 的环境：如果代理接口不可用，仍尝试直接 fetch。
+    await postJsonDirect(endpoint, apiKey, body)
   }
 }
 

@@ -3,11 +3,20 @@
  * 桌面端：fs.readFileSync
  * 移动端：思源内核 /api/file/getFile
  */
-import { fetchSyncPost } from 'siyuan'
-
 export interface AssetReaderResult {
   base64: string
   buffer: ArrayBuffer | Buffer
+}
+
+
+async function postSiyuanApi(url: string, data: unknown): Promise<any> {
+  const testFetchSyncPost = (globalThis as any).__POSTMAN_FETCH_SYNC_POST__
+  if (typeof testFetchSyncPost === 'function') {
+    return testFetchSyncPost(url, data)
+  }
+
+  const siyuan = await import('siyuan')
+  return siyuan.fetchSyncPost(url, data)
 }
 
 function isElectronEnv(): boolean {
@@ -88,7 +97,7 @@ export async function assetExists(absPath: string, wsRelativePath?: string): Pro
   }
   if (wsRelativePath) {
     try {
-      const res = await fetchSyncPost('/api/asset/statAsset', { path: wsRelativePath })
+      const res = await postSiyuanApi('/api/asset/statAsset', { path: wsRelativePath })
       return res.code === 0
     }
     catch {
