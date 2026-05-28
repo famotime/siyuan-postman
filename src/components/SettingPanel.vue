@@ -1,74 +1,5 @@
 <template>
   <div class="postman-setting">
-    <!-- HTTP API 配置（移动端 / 浏览器端） -->
-    <div
-      v-if="!isElectron"
-      class="postman-form postman-http-section"
-    >
-      <div class="postman-http-section__header">
-        <h3 class="postman-http-section__title">{{ t('settingHttpTitle', 'HTTP 邮件 API') }}</h3>
-        <span class="postman-http-section__badge">{{ t('settingHttpBadge', '移动端') }}</span>
-      </div>
-      <p class="postman-http-section__desc">{{ t('settingHttpDesc', '移动端通过 HTTP API 发送邮件，需配置 Resend API Key。') }}</p>
-
-      <label class="postman-field">
-        <span class="postman-field__label">{{ t('settingHttpApiKey', 'Resend API Key') }}</span>
-        <span class="postman-password-wrap">
-          <input
-            v-model="httpForm.httpApiKey"
-            class="b3-text-field postman-control postman-password-input"
-            :type="showHttpApiKey ? 'text' : 'password'"
-            placeholder="re_xxxxxxxxxx"
-          >
-          <button
-            type="button"
-            class="postman-password-toggle"
-            :aria-label="showHttpApiKey ? t('settingHidePassword', '隐藏密码') : t('settingShowPassword', '显示密码')"
-            @click="showHttpApiKey = !showHttpApiKey"
-          >
-            <svg
-              v-if="!showHttpApiKey"
-              viewBox="0 0 24 24"
-              width="16"
-              height="16"
-              aria-hidden="true"
-            >
-              <path
-                d="M12 5C7 5 3.12 8.11 1.5 12c1.62 3.89 5.5 7 10.5 7s8.88-3.11 10.5-7C20.88 8.11 17 5 12 5zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"
-                fill="currentColor"
-              />
-            </svg>
-            <svg
-              v-else
-              viewBox="0 0 24 24"
-              width="16"
-              height="16"
-              aria-hidden="true"
-            >
-              <path
-                d="M2.81 2.81 1.39 4.22l3.05 3.05C3.26 8.3 2.27 9.57 1.5 11c1.62 3.89 5.5 7 10.5 7 1.82 0 3.5-.41 4.98-1.13l2.8 2.8 1.41-1.41L2.81 2.81zm9.19 13.19a4 4 0 0 1-4-4c0-.54.11-1.05.3-1.51l5.21 5.21c-.46.19-.97.3-1.51.3zm0-10c5 0 8.88 3.11 10.5 7-.55 1.33-1.35 2.52-2.34 3.49l-1.43-1.43A6.95 6.95 0 0 0 19 12a7 7 0 0 0-7-7c-1.08 0-2.11.25-3.02.69L7.43 4.14A10.9 10.9 0 0 1 12 6z"
-                fill="currentColor"
-              />
-            </svg>
-          </button>
-        </span>
-      </label>
-
-      <label class="postman-field">
-        <span class="postman-field__label">{{ t('settingHttpEndpoint', '自定义 Endpoint（可选）') }}</span>
-        <input
-          v-model="httpForm.httpEndpoint"
-          class="b3-text-field postman-control"
-          type="text"
-          :placeholder="t('settingHttpEndpointPlaceholder', '默认使用 https://api.resend.com/emails')"
-        >
-      </label>
-
-      <div class="postman-http-section__hint">
-        <span>{{ t('settingHttpApiKeyHint', '前往 resend.com 注册获取 API Key，免费版每月 3000 封。') }}</span>
-      </div>
-    </div>
-
     <!-- SMTP 配置（桌面端） -->
     <div class="postman-form">
       <div class="postman-field">
@@ -222,54 +153,129 @@
       </label>
     </div>
 
-    <!-- HTTP API 保存按钮（移动端） -->
-    <footer
-      v-if="!isElectron"
-      class="postman-actions"
-    >
-      <div class="postman-actions__copy">
-        <p class="postman-actions__hint">{{ t('settingHttpRelayHint', 'API Key 仅保存在本地插件数据中，不会上传。') }}</p>
-        <div
-          v-if="httpSavedMsg"
-          class="postman-status postman-status--success"
+    <!-- HTTP API 配置（Resend） -->
+    <div class="postman-form postman-http-section">
+      <div class="postman-http-section__header">
+        <h3 class="postman-http-section__title">{{ t('settingHttpTitle', 'HTTP 邮件 API') }}</h3>
+        <span class="postman-http-section__badge">{{ t('settingHttpBadge', 'HTTP API') }}</span>
+      </div>
+      <p class="postman-http-section__desc">{{ t('settingHttpDesc', '通过 Resend HTTP API 发送邮件，移动端和桌面端均可使用。') }}</p>
+
+      <label class="postman-field">
+        <span class="postman-field__label">{{ t('settingHttpApiKey', 'Resend API Key') }}</span>
+        <span class="postman-password-wrap">
+          <input
+            v-model="httpForm.httpApiKey"
+            class="b3-text-field postman-control postman-password-input"
+            :type="showHttpApiKey ? 'text' : 'password'"
+            placeholder="re_xxxxxxxxxx"
+          >
+          <button
+            type="button"
+            class="postman-password-toggle"
+            :aria-label="showHttpApiKey ? t('settingHidePassword', '隐藏密码') : t('settingShowPassword', '显示密码')"
+            @click="showHttpApiKey = !showHttpApiKey"
+          >
+            <svg
+              v-if="!showHttpApiKey"
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 5C7 5 3.12 8.11 1.5 12c1.62 3.89 5.5 7 10.5 7s8.88-3.11 10.5-7C20.88 8.11 17 5 12 5zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"
+                fill="currentColor"
+              />
+            </svg>
+            <svg
+              v-else
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              aria-hidden="true"
+            >
+              <path
+                d="M2.81 2.81 1.39 4.22l3.05 3.05C3.26 8.3 2.27 9.57 1.5 11c1.62 3.89 5.5 7 10.5 7 1.82 0 3.5-.41 4.98-1.13l2.8 2.8 1.41-1.41L2.81 2.81zm9.19 13.19a4 4 0 0 1-4-4c0-.54.11-1.05.3-1.51l5.21 5.21c-.46.19-.97.3-1.51.3zm0-10c5 0 8.88 3.11 10.5 7-.55 1.33-1.35 2.52-2.34 3.49l-1.43-1.43A6.95 6.95 0 0 0 19 12a7 7 0 0 0-7-7c-1.08 0-2.11.25-3.02.69L7.43 4.14A10.9 10.9 0 0 1 12 6z"
+                fill="currentColor"
+              />
+            </svg>
+          </button>
+        </span>
+      </label>
+
+      <label class="postman-field">
+        <span class="postman-field__label">{{ t('settingHttpEndpoint', '自定义 Endpoint（可选）') }}</span>
+        <input
+          v-model="httpForm.httpEndpoint"
+          class="b3-text-field postman-control"
+          type="text"
+          :placeholder="t('settingHttpEndpointPlaceholder', '默认使用 https://api.resend.com/emails')"
         >
-          <span class="postman-status__dot" />
-          <span>{{ httpSavedMsg }}</span>
-        </div>
+      </label>
+
+      <div class="postman-http-section__hint">
+        <span>{{ t('settingHttpApiKeyHint', '前往 resend.com 注册获取 API Key，免费版每月 3000 封。') }}</span>
       </div>
 
-      <button
-        class="b3-button postman-btn postman-btn--primary"
-        @click="handleHttpSave"
+      <div class="postman-test-row">
+        <label class="postman-field postman-field--inline">
+          <span class="postman-field__label">{{ t('settingHttpTestTo', '测试收件人') }}</span>
+          <input
+            v-model="testEmail"
+            class="b3-text-field postman-control postman-test-email-input"
+            type="email"
+            :placeholder="t('settingHttpTestToPlaceholder', '输入接收测试邮件的地址')"
+          >
+        </label>
+        <button
+          type="button"
+          class="b3-button postman-btn postman-btn--ghost"
+          :disabled="testing"
+          @click="handleTestSend"
+        >
+          {{ testing ? t('settingHttpTestSending', '发送中...') : t('settingHttpTestSend', '测试发送') }}
+        </button>
+      </div>
+      <div
+        v-if="testResult"
+        class="postman-status"
+        :class="testResult.ok ? 'postman-status--success' : 'postman-status--error'"
       >
-        {{ t('settingSave', '保存设置') }}
-      </button>
-    </footer>
+        <span class="postman-status__dot" />
+        <span>{{ testResult.msg }}</span>
+      </div>
+    </div>
 
-    <!-- SMTP 保存按钮（桌面端） -->
-    <footer class="postman-actions">
-      <div class="postman-actions__copy">
+    <!-- 保存 -->
+    <footer class="postman-actions postman-actions--http">
+      <div class="postman-actions__left">
         <p class="postman-actions__hint">{{ t('settingRelayHint', '邮箱信息仅保存在本地插件数据中，不会上传。') }}</p>
-        <div
-          v-if="savedMsg"
-          class="postman-status postman-status--success"
-        >
-          <span class="postman-status__dot" />
-          <span>{{ savedMsg }}</span>
-        </div>
       </div>
 
-      <button
-        class="b3-button postman-btn postman-btn--primary"
-        @click="handleSave"
-      >
-        {{ t('settingSave', '保存设置') }}
-      </button>
+      <div class="postman-actions__right">
+        <div class="postman-actions__btns">
+          <div
+            v-if="savedMsg"
+            class="postman-status postman-status--success"
+          >
+            <span class="postman-status__dot" />
+            <span>{{ savedMsg }}</span>
+          </div>
+          <button
+            class="b3-button postman-btn postman-btn--primary"
+            @click="handleSaveAll"
+          >
+            {{ t('settingSave', '保存设置') }}
+          </button>
+        </div>
+      </div>
     </footer>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed, reactive, ref, watch } from 'vue'
 import { EMAIL_PRESET_ICONS } from '@/assets/preset-icons'
 import type { EmailConfig } from '@/composables/useEmailConfig'
 import {
@@ -282,8 +288,8 @@ import {
   useEmailConfig,
   useHttpEmailConfig,
 } from '@/composables/useEmailConfig'
+import { sendEmailViaHttp } from '@/services/httpEmailService'
 import { EMAIL_PRESET_UI_META, getPresetHostCaption } from '@/utils/emailPresetUi'
-import { computed, reactive, ref, watch } from 'vue'
 
 const props = defineProps<{
   i18n: Record<string, string>
@@ -303,32 +309,90 @@ const showPassword = ref(false)
 
 const t = (key: string, fallback: string) => props.i18n[key] || fallback
 
-// ─── HTTP API 配置（移动端） ───
-const isElectron = (() => {
-  try {
-    return typeof process !== 'undefined' && typeof process.versions === 'object' && !!process.versions.electron
-  }
-  catch { return false }
-})()
-
+// ─── HTTP API 配置（Resend） ───
 const httpConfigRef = useHttpEmailConfig()
 const httpForm = reactive({
   httpApiKey: httpConfigRef.value.httpApiKey,
   httpEndpoint: httpConfigRef.value.httpEndpoint,
 })
 const showHttpApiKey = ref(false)
-const httpSavedMsg = ref('')
+const testEmail = ref(httpConfigRef.value.httpTestEmail || '')
+const testing = ref(false)
+const testResult = ref<{ ok: boolean, msg: string } | null>(null)
 
-async function handleHttpSave() {
-  await saveHttpEmailConfig({
-    httpProvider: 'resend',
-    httpApiKey: httpForm.httpApiKey,
-    httpEndpoint: httpForm.httpEndpoint,
-  })
-  httpSavedMsg.value = t('settingSaveSuccess', '设置已保存')
-  window.setTimeout(() => {
-    httpSavedMsg.value = ''
-  }, 2500)
+async function handleTestSend() {
+  if (!httpForm.httpApiKey) {
+    testResult.value = {
+      ok: false,
+      msg: t('settingHttpTestNeedApiKey', '请先填写 Resend API Key'),
+    }
+    window.setTimeout(() => {
+      testResult.value = null
+    }, 3000)
+    return
+  }
+
+  const to = testEmail.value.trim()
+  if (!to) {
+    testResult.value = {
+      ok: false,
+      msg: t('settingHttpTestToPlaceholder', '输入接收测试邮件的地址'),
+    }
+    window.setTimeout(() => {
+      testResult.value = null
+    }, 3000)
+    return
+  }
+
+  testing.value = true
+  testResult.value = null
+
+  try {
+    await sendEmailViaHttp({
+      config: {
+        ...normalizeEmailConfig({ ...form }),
+        user: 'onboarding@resend.dev',
+        fromName: 'SiYuan Postman',
+      },
+      httpConfig: {
+        httpProvider: 'resend',
+        httpApiKey: httpForm.httpApiKey,
+        httpEndpoint: httpForm.httpEndpoint,
+      },
+      to: [to],
+      subject: 'SiYuan Postman - Test Email',
+      mode: 'body',
+      docTitle: 'Test',
+      htmlContent: '<p>This is a test email sent from SiYuan Postman plugin.</p><p>If you received this, your Resend API configuration is working correctly.</p>',
+    })
+    testResult.value = {
+      ok: true,
+      msg: t('settingHttpTestSuccess', '测试邮件发送成功！'),
+    }
+  }
+  catch (err: any) {
+    const raw = err?.message || String(err)
+    let msg: string
+    if (raw.includes('403') && raw.includes('domain is not verified')) {
+      msg = t('settingHttpTestDomainError', '发件域名未验证。请前往 resend.com/domains 添加并验证你的域名，或使用默认发件人测试。')
+    }
+    else if (raw.startsWith('HTTP_EMAIL_')) {
+      msg = `${t('httpEmailError', '邮件 API 调用失败：')}${raw}`
+    }
+    else {
+      msg = `${t('settingHttpTestFail', '测试发送失败：')}${raw}`
+    }
+    testResult.value = {
+      ok: false,
+      msg,
+    }
+  }
+  finally {
+    testing.value = false
+    window.setTimeout(() => {
+      testResult.value = null
+    }, 5000)
+  }
 }
 
 const accountOptions = computed(() => {
@@ -398,10 +462,18 @@ function applyPreset() {
   form.secure = true
 }
 
-async function handleSave() {
+async function handleSaveAll() {
   const normalized = normalizeEmailConfig({ ...form, secure: true })
   await saveEmailConfig(normalized)
   selectedId.value = normalized.id
+
+  await saveHttpEmailConfig({
+    httpProvider: 'resend',
+    httpApiKey: httpForm.httpApiKey,
+    httpEndpoint: httpForm.httpEndpoint,
+    httpTestEmail: testEmail.value.trim(),
+  })
+
   savedMsg.value = t('settingSaveSuccess', '设置已保存')
   window.setTimeout(() => {
     savedMsg.value = ''

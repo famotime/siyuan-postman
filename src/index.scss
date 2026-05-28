@@ -176,6 +176,54 @@
     line-height: 1.5;
     color: var(--pm-text-muted);
   }
+
+  &--http {
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+
+  &__left {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  &__right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  &__btns {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+}
+
+.postman-field--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+
+  .postman-field__label {
+    flex-shrink: 0;
+  }
+}
+
+.postman-test-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+
+  .postman-field--inline {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.postman-test-email-input {
+  min-width: 200px;
 }
 
 .postman-btn {

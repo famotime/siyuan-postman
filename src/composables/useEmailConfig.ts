@@ -237,6 +237,7 @@ export interface HttpEmailConfigState {
   httpProvider: HttpEmailProvider
   httpApiKey: string
   httpEndpoint: string
+  httpTestEmail: string
 }
 
 export const HTTP_CONFIG_STORAGE_KEY = 'postman-http-config.json'
@@ -245,6 +246,7 @@ const DEFAULT_HTTP_CONFIG: HttpEmailConfigState = {
   httpProvider: 'resend',
   httpApiKey: '',
   httpEndpoint: '',
+  httpTestEmail: '',
 }
 
 const httpConfig = ref<HttpEmailConfigState>({ ...DEFAULT_HTTP_CONFIG })
@@ -262,6 +264,7 @@ export async function loadHttpEmailConfig(): Promise<HttpEmailConfigState> {
         httpProvider: (data as any).httpProvider === 'resend' ? 'resend' : 'resend',
         httpApiKey: typeof (data as any).httpApiKey === 'string' ? (data as any).httpApiKey : '',
         httpEndpoint: typeof (data as any).httpEndpoint === 'string' ? (data as any).httpEndpoint : '',
+        httpTestEmail: typeof (data as any).httpTestEmail === 'string' ? (data as any).httpTestEmail : '',
       }
     }
     else {
