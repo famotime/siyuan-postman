@@ -172,7 +172,7 @@
         </button>
         <button
           class="b3-button postman-btn postman-btn--primary"
-          :disabled="sending || !canSend"
+          :disabled="sending"
           @click="handleSend"
         >
           <span
@@ -312,12 +312,8 @@ function commitRecipientDraft() {
     .split(/[，,]/)
     .map(item => item.trim())
     .filter(Boolean)
-  const invalid = emails.filter(e => !EMAIL_RE.test(e))
-  if (invalid.length) {
-    window.alert(t('invalidEmailError', '以下邮箱地址格式不正确：') + '\n' + invalid.join('\n'))
-    return
-  }
-  for (const email of emails) {
+  const valid = emails.filter(e => EMAIL_RE.test(e))
+  for (const email of valid) {
     if (!selectedRecipients.value.includes(email)) {
       selectedRecipients.value = [...selectedRecipients.value, email]
     }
@@ -380,8 +376,6 @@ const configReady = computed(() => {
   return Boolean(httpConfigRef.value.httpApiKey)
 })
 
-const canSend = computed(() => selectedRecipients.value.length > 0)
-
 watch(() => props.mode, (value) => {
   localMode.value = value
 })
@@ -397,11 +391,27 @@ watch(() => activeAccount.value?.lastTo, (value) => {
 
 async function handleSend() {
   statusMsg.value = ''
+
+  // Validate draft text before committing
+  const draftEmails = recipientDraft.value
+    .split(/[，,]/)
+    .map(item => item.trim())
+    .filter(Boolean)
+
+  if (draftEmails.length) {
+    const invalidDrafts = draftEmails.filter(e => !EMAIL_RE.test(e))
+    if (invalidDrafts.length) {
+      window.alert(t('invalidEmailError', '以下邮箱地址格式不正确：') + '\n' + invalidDrafts.join('\n'))
+      return
+    }
+  }
+
   commitRecipientDraft()
 
   const toList = selectedRecipients.value.slice()
 
   if (!toList.length) {
+    window.alert(t('dialogToRequired', '请填写收件人邮箱地址'))
     return
   }
 

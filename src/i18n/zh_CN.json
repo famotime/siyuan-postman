@@ -60,6 +60,7 @@
   "noHttpConfigError": "请在设置中配置 Resend API Key 信息",
   "httpEmailError": "邮件 API 调用失败：",
   "invalidEmailError": "以下邮箱地址格式不正确：",
+  "dialogToRequired": "请填写收件人邮箱地址",
   "settingHttpTestSend": "测试发送",
   "settingHttpTestTo": "测试收件人",
   "settingHttpTestToPlaceholder": "输入接收测试邮件的地址",

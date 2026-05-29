@@ -60,6 +60,7 @@
   "noHttpConfigError": "Please configure Resend API Key in settings",
   "httpEmailError": "HTTP email API error: ",
   "invalidEmailError": "The following email addresses are invalid: ",
+  "dialogToRequired": "Please enter a recipient email address",
   "settingHttpTestSend": "Test Send",
   "settingHttpTestTo": "Test Recipient",
   "settingHttpTestToPlaceholder": "Enter address to receive the test email",

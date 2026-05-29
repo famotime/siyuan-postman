@@ -6,6 +6,16 @@
   }
 }
 
+.b3-dialog__container {
+  .postman-setting,
+  .postman-dialog {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    max-height: calc(100vh - 120px);
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+}
+
 .postman-setting,
 .postman-dialog {
   --pm-accent: var(--b3-theme-primary, #4c6fff);

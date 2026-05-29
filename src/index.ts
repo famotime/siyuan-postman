@@ -91,7 +91,7 @@ export default class PostmanPlugin extends Plugin {
       dialog,
       mountId: 'postman-setting-mount',
       component: SettingPanel,
-      props: { i18n: this.t },
+      props: { i18n: this.t, isMobile: this.isMobile },
     })
   }
 

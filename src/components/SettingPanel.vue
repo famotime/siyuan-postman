@@ -1,7 +1,7 @@
 <template>
   <div class="postman-setting">
     <!-- SMTP 配置（桌面端） -->
-    <div class="postman-form">
+    <div v-if="!isMobile" class="postman-form">
       <div class="postman-field">
         <span class="postman-field__label">{{ t('settingAccount', '发件账号') }}</span>
         <div class="postman-account-row">
@@ -293,6 +293,7 @@ import { EMAIL_PRESET_UI_META, getPresetHostCaption } from '@/utils/emailPresetU
 
 const props = defineProps<{
   i18n: Record<string, string>
+  isMobile?: boolean
 }>()
 
 const NEW_ACCOUNT_KEY = '__new__'
