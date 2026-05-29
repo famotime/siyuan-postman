@@ -77,22 +77,6 @@ async function postSiyuanApi(url: string, data: unknown): Promise<any> {
   return siyuan.fetchSyncPost(url, data)
 }
 
-async function postJsonDirect(endpoint: string, apiKey: string, body: Record<string, any>): Promise<void> {
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  })
-
-  if (!res.ok) {
-    const errorBody = await res.text().catch(() => '')
-    throw new Error(`HTTP_EMAIL_${res.status}: ${errorBody}`)
-  }
-}
-
 async function postJsonViaSiyuanForwardProxy(
   endpoint: string,
   apiKey: string,
@@ -163,8 +147,7 @@ async function sendViaResend(
       throw error
     }
 
-    // 兼容没有 forwardProxy 的环境：如果代理接口不可用，仍尝试直接 fetch。
-    await postJsonDirect(endpoint, apiKey, body)
+    throw new Error(`HTTP_EMAIL_PROXY_UNAVAILABLE: ${error?.message || String(error)}`)
   }
 }
 

@@ -69,3 +69,54 @@ test('sendEmailViaHttp posts Resend request through SiYuan forwardProxy when ava
   ])
   assert.equal(JSON.parse(calls[0].data.payload).subject, 'Hello')
 })
+
+test('sendEmailViaHttp reports proxy failure without falling back to direct fetch', async () => {
+  ;(globalThis as any).window = {
+    siyuan: { config: { system: { workspaceDir: '/workspace' } } },
+  }
+  ;(globalThis as any).__POSTMAN_FETCH_SYNC_POST__ = async () => {
+    throw new TypeError('Failed to fetch')
+  }
+
+  const originalFetch = globalThis.fetch
+  let directFetchCalled = false
+  globalThis.fetch = (() => {
+    directFetchCalled = true
+    throw new Error('direct fetch should not be used')
+  }) as any
+
+  try {
+    await assert.rejects(
+      sendEmailViaHttp({
+        config: {
+          id: 'acct_1',
+          preset: 'custom',
+          host: '',
+          port: 465,
+          secure: true,
+          user: 'sender@example.com',
+          password: '',
+          fromName: 'Sender',
+          lastTo: '',
+          hasSentSuccessfully: false,
+        },
+        httpConfig: {
+          httpProvider: 'resend',
+          httpApiKey: 're_test',
+        },
+        to: ['to@example.com'],
+        subject: 'Hello',
+        mode: 'body',
+        docTitle: 'Doc',
+        htmlContent: '<p>Hello</p>',
+      }),
+      /HTTP_EMAIL_PROXY_UNAVAILABLE: Failed to fetch/,
+    )
+  }
+  finally {
+    globalThis.fetch = originalFetch
+    delete (globalThis as any).__POSTMAN_FETCH_SYNC_POST__
+  }
+
+  assert.equal(directFetchCalled, false)
+})

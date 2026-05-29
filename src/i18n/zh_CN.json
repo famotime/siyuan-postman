@@ -59,6 +59,7 @@
   "dialogHttpModeDesc": "通过 Resend API 发送，可在设置中配置",
   "noHttpConfigError": "请在设置中配置 Resend API Key 信息",
   "httpEmailError": "邮件 API 调用失败：",
+  "httpEmailProxyUnavailable": "无法通过思源代理访问 Resend。请升级思源客户端，或改用可中转 Resend 请求的自定义 Endpoint。",
   "invalidEmailError": "以下邮箱地址格式不正确：",
   "dialogToRequired": "请填写收件人邮箱地址",
   "settingHttpTestSend": "测试发送",

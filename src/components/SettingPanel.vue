@@ -377,6 +377,9 @@ async function handleTestSend() {
     if (raw.includes('403') && raw.includes('domain is not verified')) {
       msg = t('settingHttpTestDomainError', '发件域名未验证。请前往 resend.com/domains 添加并验证你的域名，或使用默认发件人测试。')
     }
+    else if (raw.startsWith('HTTP_EMAIL_PROXY_UNAVAILABLE')) {
+      msg = t('httpEmailProxyUnavailable', '移动端无法通过思源代理访问 Resend。请升级思源客户端，或改用可中转 Resend 请求的自定义 Endpoint。')
+    }
     else if (raw.startsWith('HTTP_EMAIL_')) {
       msg = `${t('httpEmailError', '邮件 API 调用失败：')}${raw}`
     }

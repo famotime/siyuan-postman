@@ -494,6 +494,9 @@ async function handleSend() {
     else if (error?.message === 'NO_HTTP_CONFIG' || error?.message === 'NO_HTTP_API_KEY') {
       errMsg += t('noHttpConfigError', '请在设置中配置 Resend API Key 信息')
     }
+    else if (error?.message?.startsWith?.('HTTP_EMAIL_PROXY_UNAVAILABLE')) {
+      errMsg += t('httpEmailProxyUnavailable', '移动端无法通过思源代理访问 Resend。请升级思源客户端，或改用可中转 Resend 请求的自定义 Endpoint。')
+    }
     else if (error?.message?.startsWith?.('HTTP_EMAIL_')) {
       errMsg += t('httpEmailError', '邮件 API 调用失败：') + error.message
     }

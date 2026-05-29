@@ -59,6 +59,7 @@
   "dialogHttpModeDesc": "Sends via Resend API. Configure in settings.",
   "noHttpConfigError": "Please configure Resend API Key in settings",
   "httpEmailError": "HTTP email API error: ",
+  "httpEmailProxyUnavailable": "Unable to reach Resend through the SiYuan proxy. Please upgrade SiYuan, or use a custom Endpoint that can relay Resend requests.",
   "invalidEmailError": "The following email addresses are invalid: ",
   "dialogToRequired": "Please enter a recipient email address",
   "settingHttpTestSend": "Test Send",
