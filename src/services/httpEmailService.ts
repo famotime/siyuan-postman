@@ -67,22 +67,39 @@ function createMobileDeps(): EmailComposerDeps {
 /**
  * 通过 Resend API 发送邮件
  */
+/**
+ * 调用思源笔记 Kernel API
+ * 桌面端通过加载 siyuan SDK 模块进行本地调用，移动端如果无法加载该 SDK 模块，则返回 null 以便触发原生 fetch 降级。
+ */
 async function postSiyuanApi(url: string, data: unknown): Promise<any> {
   const testFetchSyncPost = (globalThis as any).__POSTMAN_FETCH_SYNC_POST__
   if (typeof testFetchSyncPost === 'function') {
     return testFetchSyncPost(url, data)
   }
 
-  const siyuan = await import('siyuan')
-  return siyuan.fetchSyncPost(url, data)
+  try {
+    const siyuan = await import('siyuan')
+    if (siyuan && typeof siyuan.fetchSyncPost === 'function') {
+      return await siyuan.fetchSyncPost(url, data)
+    }
+  }
+  catch (error) {
+    // 移动端 WebView 环境下，siyuan npm 模块可能加载失败，打印日志并降级
+    console.warn('[Postman] 导入 siyuan SDK 模块失败，将降级使用原生 fetch 转发。', error)
+  }
+  return null
 }
 
+/**
+ * 通过思源服务端（Kernel）的网络中转接口转发请求至 Resend API。
+ * 如果官方 SDK 方法不可用，则通过原生 fetch 进行降级转发。
+ */
 async function postJsonViaSiyuanForwardProxy(
   endpoint: string,
   apiKey: string,
   body: Record<string, any>,
 ): Promise<void> {
-  const response = await postSiyuanApi('/api/network/forwardProxy', {
+  const payload = {
     url: endpoint,
     method: 'POST',
     timeout: 30000,
@@ -93,15 +110,63 @@ async function postJsonViaSiyuanForwardProxy(
     payload: body,
     payloadEncoding: 'text',
     responseEncoding: 'text',
-  })
-
-  if (response?.code !== 0) {
-    throw new Error(`HTTP_EMAIL_PROXY: ${response?.msg || 'forwardProxy failed'}`)
   }
 
-  const status = Number(response?.data?.status || 0)
+  // 1. 优先尝试使用思源官方 SDK 的 fetchSyncPost 方法发送代理请求
+  let response: any = null
+  try {
+    response = await postSiyuanApi('/api/network/forwardProxy', payload)
+  }
+  catch (error) {
+    console.warn('[Postman] fetchSyncPost 接口调用失败，准备使用原生 fetch 转发降级方案。', error)
+  }
+
+  // 2. 如果官方 SDK 返回了有效响应，则直接处理该响应（一般用于桌面端或支持官方 API 调用环境）
+  if (response !== null) {
+    if (response?.code !== 0) {
+      throw new Error(`HTTP_EMAIL_PROXY: ${response?.msg || 'forwardProxy failed'}`)
+    }
+
+    const status = Number(response?.data?.status || 0)
+    if (status < 200 || status >= 300) {
+      throw new Error(`HTTP_EMAIL_${status || 'PROXY'}: ${response?.data?.body || response?.msg || ''}`)
+    }
+    return
+  }
+
+  // 3. 降级方案：在移动端 WebView 中使用原生 fetch 直接访问本机的 /api/network/forwardProxy 中转接口。
+  // 原生 fetch 发送相对路径请求时，会自动携带浏览器当前的 Session Cookie，从而安全通过思源服务端的鉴权，无需暴露 apiToken。
+  console.info('[Postman] 正在启动原生 fetch 转发降级方案。')
+
+  let baseUrl = ''
+  if (window.location && window.location.origin && window.location.origin !== 'file://') {
+    baseUrl = window.location.origin
+  }
+
+  const proxyApiUrl = `${baseUrl}/api/network/forwardProxy`
+
+  const fetchRes = await fetch(proxyApiUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!fetchRes.ok) {
+    const errorText = await fetchRes.text()
+    throw new Error(`HTTP_EMAIL_PROXY: 网络请求错误 ${fetchRes.status} ${fetchRes.statusText} - ${errorText}`)
+  }
+
+  const responseJson = await fetchRes.json()
+
+  if (responseJson?.code !== 0) {
+    throw new Error(`HTTP_EMAIL_PROXY: ${responseJson?.msg || 'forwardProxy failed'}`)
+  }
+
+  const status = Number(responseJson?.data?.status || 0)
   if (status < 200 || status >= 300) {
-    throw new Error(`HTTP_EMAIL_${status || 'PROXY'}: ${response?.data?.body || response?.msg || ''}`)
+    throw new Error(`HTTP_EMAIL_${status || 'PROXY'}: ${responseJson?.data?.body || responseJson?.msg || ''}`)
   }
 }
 
