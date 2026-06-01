@@ -89,9 +89,8 @@ async function postJsonViaSiyuanForwardProxy(
     contentType: 'application/json',
     headers: [
       { Authorization: `Bearer ${apiKey}` },
-      { 'Content-Type': 'application/json' },
     ],
-    payload: JSON.stringify(body),
+    payload: body,
     payloadEncoding: 'text',
     responseEncoding: 'text',
   })

@@ -65,9 +65,8 @@ test('sendEmailViaHttp posts Resend request through SiYuan forwardProxy when ava
   assert.equal(calls[0].data.contentType, 'application/json')
   assert.deepEqual(calls[0].data.headers, [
     { Authorization: 'Bearer re_test' },
-    { 'Content-Type': 'application/json' },
   ])
-  assert.equal(JSON.parse(calls[0].data.payload).subject, 'Hello')
+  assert.equal(calls[0].data.payload.subject, 'Hello')
 })
 
 test('sendEmailViaHttp reports proxy failure without falling back to direct fetch', async () => {
