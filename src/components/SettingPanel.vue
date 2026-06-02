@@ -1,7 +1,17 @@
 <template>
   <div class="postman-setting">
     <!-- SMTP 配置（桌面端） -->
-    <div v-if="!isMobile" class="postman-form">
+    <div v-if="!isMobile" class="postman-form postman-section">
+      <div class="postman-section__header" @click="smtpCollapsed = !smtpCollapsed">
+        <h3 class="postman-section__title">{{ t('settingSmtpTitle', '发送邮箱') }}</h3>
+        <span class="postman-section__badge">{{ t('settingSmtpBadge', 'PC 端设置') }}</span>
+        <span class="postman-section__toggle" :class="{ 'postman-section__toggle--expanded': !smtpCollapsed }">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+            <path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z" fill="currentColor" />
+          </svg>
+        </span>
+      </div>
+      <div v-show="!smtpCollapsed">
       <div class="postman-field">
         <span class="postman-field__label">{{ t('settingAccount', '发件账号') }}</span>
         <div class="postman-account-row">
@@ -151,99 +161,107 @@
           :placeholder="t('settingFromPlaceholder', '邮件中显示的发件人名称')"
         >
       </label>
+      </div>
     </div>
 
     <!-- HTTP API 配置（Resend） -->
     <div class="postman-form postman-http-section">
-      <div class="postman-http-section__header">
+      <div class="postman-http-section__header" @click="httpCollapsed = !httpCollapsed">
         <h3 class="postman-http-section__title">{{ t('settingHttpTitle', 'HTTP 邮件 API') }}</h3>
         <span class="postman-http-section__badge">{{ t('settingHttpBadge', 'HTTP API') }}</span>
-      </div>
-      <p class="postman-http-section__desc">{{ t('settingHttpDesc', '通过 Resend HTTP API 发送邮件，移动端和桌面端均可使用。') }}</p>
-
-      <label class="postman-field">
-        <span class="postman-field__label">{{ t('settingHttpApiKey', 'Resend API Key') }}</span>
-        <span class="postman-password-wrap">
-          <input
-            v-model="httpForm.httpApiKey"
-            class="b3-text-field postman-control postman-password-input"
-            :type="showHttpApiKey ? 'text' : 'password'"
-            placeholder="re_xxxxxxxxxx"
-          >
-          <button
-            type="button"
-            class="postman-password-toggle"
-            :aria-label="showHttpApiKey ? t('settingHidePassword', '隐藏密码') : t('settingShowPassword', '显示密码')"
-            @click="showHttpApiKey = !showHttpApiKey"
-          >
-            <svg
-              v-if="!showHttpApiKey"
-              viewBox="0 0 24 24"
-              width="16"
-              height="16"
-              aria-hidden="true"
-            >
-              <path
-                d="M12 5C7 5 3.12 8.11 1.5 12c1.62 3.89 5.5 7 10.5 7s8.88-3.11 10.5-7C20.88 8.11 17 5 12 5zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"
-                fill="currentColor"
-              />
-            </svg>
-            <svg
-              v-else
-              viewBox="0 0 24 24"
-              width="16"
-              height="16"
-              aria-hidden="true"
-            >
-              <path
-                d="M2.81 2.81 1.39 4.22l3.05 3.05C3.26 8.3 2.27 9.57 1.5 11c1.62 3.89 5.5 7 10.5 7 1.82 0 3.5-.41 4.98-1.13l2.8 2.8 1.41-1.41L2.81 2.81zm9.19 13.19a4 4 0 0 1-4-4c0-.54.11-1.05.3-1.51l5.21 5.21c-.46.19-.97.3-1.51.3zm0-10c5 0 8.88 3.11 10.5 7-.55 1.33-1.35 2.52-2.34 3.49l-1.43-1.43A6.95 6.95 0 0 0 19 12a7 7 0 0 0-7-7c-1.08 0-2.11.25-3.02.69L7.43 4.14A10.9 10.9 0 0 1 12 6z"
-                fill="currentColor"
-              />
-            </svg>
-          </button>
+        <span class="postman-http-section__toggle" :class="{ 'postman-http-section__toggle--expanded': !httpCollapsed }">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+            <path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z" fill="currentColor" />
+          </svg>
         </span>
-      </label>
-
-      <label class="postman-field">
-        <span class="postman-field__label">{{ t('settingHttpEndpoint', '自定义 Endpoint（可选）') }}</span>
-        <input
-          v-model="httpForm.httpEndpoint"
-          class="b3-text-field postman-control"
-          type="text"
-          :placeholder="t('settingHttpEndpointPlaceholder', '默认使用 https://api.resend.com/emails')"
-        >
-      </label>
-
-      <div class="postman-http-section__hint">
-        <span>{{ t('settingHttpApiKeyHint', '前往 resend.com 注册获取 API Key，免费版每月 3000 封。') }}</span>
       </div>
+      <div v-show="!httpCollapsed">
+        <p class="postman-http-section__desc">{{ t('settingHttpDesc', '通过 Resend HTTP API 发送邮件，移动端和桌面端均可使用。') }}</p>
 
-      <div class="postman-test-row">
-        <label class="postman-field postman-field--inline">
-          <span class="postman-field__label">{{ t('settingHttpTestTo', '测试收件人') }}</span>
+        <label class="postman-field">
+          <span class="postman-field__label">{{ t('settingHttpApiKey', 'Resend API Key') }}</span>
+          <span class="postman-password-wrap">
+            <input
+              v-model="httpForm.httpApiKey"
+              class="b3-text-field postman-control postman-password-input"
+              :type="showHttpApiKey ? 'text' : 'password'"
+              placeholder="re_xxxxxxxxxx"
+            >
+            <button
+              type="button"
+              class="postman-password-toggle"
+              :aria-label="showHttpApiKey ? t('settingHidePassword', '隐藏密码') : t('settingShowPassword', '显示密码')"
+              @click="showHttpApiKey = !showHttpApiKey"
+            >
+              <svg
+                v-if="!showHttpApiKey"
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                aria-hidden="true"
+              >
+                <path
+                  d="M12 5C7 5 3.12 8.11 1.5 12c1.62 3.89 5.5 7 10.5 7s8.88-3.11 10.5-7C20.88 8.11 17 5 12 5zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"
+                  fill="currentColor"
+                />
+              </svg>
+              <svg
+                v-else
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                aria-hidden="true"
+              >
+                <path
+                  d="M2.81 2.81 1.39 4.22l3.05 3.05C3.26 8.3 2.27 9.57 1.5 11c1.62 3.89 5.5 7 10.5 7 1.82 0 3.5-.41 4.98-1.13l2.8 2.8 1.41-1.41L2.81 2.81zm9.19 13.19a4 4 0 0 1-4-4c0-.54.11-1.05.3-1.51l5.21 5.21c-.46.19-.97.3-1.51.3zm0-10c5 0 8.88 3.11 10.5 7-.55 1.33-1.35 2.52-2.34 3.49l-1.43-1.43A6.95 6.95 0 0 0 19 12a7 7 0 0 0-7-7c-1.08 0-2.11.25-3.02.69L7.43 4.14A10.9 10.9 0 0 1 12 6z"
+                  fill="currentColor"
+                />
+              </svg>
+            </button>
+          </span>
+        </label>
+
+        <label class="postman-field">
+          <span class="postman-field__label">{{ t('settingHttpEndpoint', '自定义 Endpoint（可选）') }}</span>
           <input
-            v-model="testEmail"
-            class="b3-text-field postman-control postman-test-email-input"
-            type="email"
-            :placeholder="t('settingHttpTestToPlaceholder', '输入接收测试邮件的地址')"
+            v-model="httpForm.httpEndpoint"
+            class="b3-text-field postman-control"
+            type="text"
+            :placeholder="t('settingHttpEndpointPlaceholder', '默认使用 https://api.resend.com/emails')"
           >
         </label>
-        <button
-          type="button"
-          class="b3-button postman-btn postman-btn--ghost"
-          :disabled="testing"
-          @click="handleTestSend"
+
+        <div class="postman-http-section__hint">
+          <span>{{ t('settingHttpApiKeyHint', '前往 resend.com 注册获取 API Key，免费版每月 3000 封。') }}</span>
+        </div>
+
+        <div class="postman-test-row">
+          <label class="postman-field postman-field--inline">
+            <span class="postman-field__label">{{ t('settingHttpTestTo', '测试收件人') }}</span>
+            <input
+              v-model="testEmail"
+              class="b3-text-field postman-control postman-test-email-input"
+              type="email"
+              :placeholder="t('settingHttpTestToPlaceholder', '输入接收测试邮件的地址')"
+            >
+          </label>
+          <button
+            type="button"
+            class="b3-button postman-btn postman-btn--ghost"
+            :disabled="testing"
+            @click="handleTestSend"
+          >
+            {{ testing ? t('settingHttpTestSending', '发送中...') : t('settingHttpTestSend', '测试发送') }}
+          </button>
+        </div>
+        <div
+          v-if="testResult"
+          class="postman-status"
+          :class="testResult.ok ? 'postman-status--success' : 'postman-status--error'"
         >
-          {{ testing ? t('settingHttpTestSending', '发送中...') : t('settingHttpTestSend', '测试发送') }}
-        </button>
-      </div>
-      <div
-        v-if="testResult"
-        class="postman-status"
-        :class="testResult.ok ? 'postman-status--success' : 'postman-status--error'"
-      >
-        <span class="postman-status__dot" />
-        <span>{{ testResult.msg }}</span>
+          <span class="postman-status__dot" />
+          <span>{{ testResult.msg }}</span>
+        </div>
       </div>
     </div>
 
@@ -317,6 +335,8 @@ const httpForm = reactive({
   httpEndpoint: httpConfigRef.value.httpEndpoint,
 })
 const showHttpApiKey = ref(false)
+const httpCollapsed = ref(!props.isMobile)
+const smtpCollapsed = ref(false)
 const testEmail = ref(httpConfigRef.value.httpTestEmail || '')
 const testing = ref(false)
 const testResult = ref<{ ok: boolean, msg: string } | null>(null)
@@ -639,16 +659,15 @@ async function handleRemove() {
   }
 }
 
+.postman-section,
 .postman-http-section {
-  padding-bottom: 16px;
-  margin-bottom: 4px;
-  border-bottom: 1px solid var(--pm-border);
-
   &__header {
     display: flex;
     align-items: center;
     gap: 8px;
     margin-bottom: 4px;
+    cursor: pointer;
+    user-select: none;
   }
 
   &__title {
@@ -666,6 +685,31 @@ async function handleRemove() {
     color: var(--pm-accent);
     font-weight: 600;
   }
+
+  &__toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    color: var(--pm-text-muted);
+    transition: transform 0.2s ease;
+
+    &--expanded {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+.postman-section {
+  padding-bottom: 16px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--pm-border);
+}
+
+.postman-http-section {
+  padding-bottom: 16px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--pm-border);
 
   &__desc {
     font-size: 13px;
