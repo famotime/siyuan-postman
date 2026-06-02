@@ -284,7 +284,8 @@ test('sendEmailViaHttp inlines mobile body images from SiYuan asset paths', asyn
     delete (globalThis as any).__POSTMAN_FETCH_SYNC_POST__
   }
 
-  assert.deepEqual(assetStatPaths, ['/data/assets/foo.png', '/data/assets/bar.png'])
+  // 修复后 statAsset 接收的是 assets/ 开头的路径
+  assert.deepEqual(assetStatPaths, ['assets/foo.png', 'assets/bar.png'])
   assert.deepEqual(fileReadPaths, ['/data/assets/foo.png', '/data/assets/bar.png'])
 
   assert.equal(calls.length, 1)
@@ -377,7 +378,8 @@ test('sendEmailViaHttp zips mobile attachment images through native fetch when S
     delete (globalThis as any).window.location
   }
 
-  assert.deepEqual(assetStatPaths, ['/data/assets/640_8fe627098fd7-20260529215204-p154g0v.png'])
+  // 修复后 statAsset 接收的是 assets/ 开头的路径
+  assert.deepEqual(assetStatPaths, ['assets/640_8fe627098fd7-20260529215204-p154g0v.png'])
   assert.deepEqual(fileReadPaths, ['/data/assets/640_8fe627098fd7-20260529215204-p154g0v.png'])
 
   assert.equal(nativeFetchCalls.length, 1)

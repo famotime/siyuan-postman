@@ -246,12 +246,17 @@ async function sendViaResend(
   if (payload.html) body.html = payload.html
   if (payload.text) body.text = payload.text
   if (payload.attachments?.length) {
-    body.attachments = payload.attachments.map(att => ({
-      filename: att.filename,
-      content: att.content, // base64
-      contentType: att.contentType,
-      contentId: att.contentId,
-    }))
+    // Resend REST API 使用 snake_case 字段名（区别于 Node.js SDK 的 camelCase）
+    body.attachments = payload.attachments.map((att) => {
+      const entry: Record<string, string> = {
+        filename: att.filename,
+        content: att.content, // base64
+      }
+      if (att.contentType) entry.contentType = att.contentType
+      // contentId 用于将附件与 HTML 中 cid: 引用关联，实现内联显示
+      if (att.contentId) entry.contentId = att.contentId
+      return entry
+    })
   }
 
   try {

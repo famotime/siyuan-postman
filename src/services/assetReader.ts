@@ -121,7 +121,9 @@ export async function assetExists(absPath: string, wsRelativePath?: string): Pro
   }
   if (wsRelativePath) {
     try {
-      const res = await postSiyuanApi('/api/asset/statAsset', { path: wsRelativePath })
+      // statAsset API 期望 assets/ 开头的路径，需从 /data/assets/... 中提取
+      const assetPath = wsRelativePath.replace(/^\/?data\//, '')
+      const res = await postSiyuanApi('/api/asset/statAsset', { path: assetPath })
       return res.code === 0
     }
     catch {
