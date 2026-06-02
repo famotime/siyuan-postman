@@ -5,7 +5,7 @@
 import { normalizeEmailConfig } from '@/composables/useEmailConfig'
 import type { EmailConfig } from '@/composables/useEmailConfig'
 import PluginInfoString from '@/../plugin.json'
-import { composeAttachmentEmail, composeBodyEmail } from './emailComposer'
+import { composeAttachmentEmailWithAdapter, composeBodyEmailWithAdapter } from './emailComposerShared'
 import { sendEmailViaHttp, type HttpEmailConfig } from './httpEmailService'
 
 /** 发送模式 */
@@ -80,6 +80,25 @@ async function sendEmailViaSmtp(options: SendEmailOptions): Promise<void> {
   const nodemailer = requireNodeModule('nodemailer')
   const fs = requireNodeModule('fs')
   const path = requireNodeModule('path')
+  const composerAdapter = {
+    getWorkspacePath,
+    basename: (assetPath: string) => path.basename(assetPath),
+    assetExists: async (absPath: string) => fs.existsSync(absPath),
+    readAsset: async (absPath: string) => {
+      const buffer: Buffer = fs.readFileSync(absPath)
+      return {
+        base64: buffer.toString('base64'),
+        buffer,
+      }
+    },
+    createInlineAttachment: async ({ assetPath, absPath, cid }: { assetPath: string, absPath: string, cid: string }) => ({
+      filename: path.basename(assetPath),
+      path: absPath,
+      cid,
+    }),
+    createArchiveContent: (zip: any) => zip.generateAsync({ type: 'nodebuffer' }),
+    createTextContent: (text: string) => text,
+  }
 
   if (!normalizedConfig.host || !normalizedConfig.user || !normalizedConfig.password) {
     throw new Error('NO_CONFIG')
@@ -104,7 +123,7 @@ async function sendEmailViaSmtp(options: SendEmailOptions): Promise<void> {
   let mailOptions: any
 
   if (mode === 'body') {
-    const { html, attachments } = composeBodyEmail(htmlContent, { fs, path, getWorkspacePath })
+    const { html, attachments } = await composeBodyEmailWithAdapter(htmlContent, composerAdapter)
     mailOptions = {
       from: fromAddress,
       to: to.join(', '),
@@ -114,7 +133,7 @@ async function sendEmailViaSmtp(options: SendEmailOptions): Promise<void> {
     }
   }
   else {
-    const { text, attachments } = await composeAttachmentEmail(docTitle, mdContent, { fs, path, getWorkspacePath })
+    const { text, attachments } = await composeAttachmentEmailWithAdapter(docTitle, mdContent, composerAdapter)
     mailOptions = {
       from: fromAddress,
       to: to.join(', '),

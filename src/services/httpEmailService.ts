@@ -2,10 +2,9 @@
  * HTTP 邮件发送服务（移动端）
  * 通过 Resend REST API 发送邮件，不依赖 Node.js 模块
  */
-import JSZip from 'jszip'
 import type { EmailConfig } from '../composables/useEmailConfig.ts'
-import { composeAttachmentEmail, composeBodyEmail, type EmailComposerDeps } from './emailComposer.ts'
 import { assetExists, readAsset } from './assetReader.ts'
+import { composeAttachmentEmailWithAdapter, composeBodyEmailWithAdapter, type EmailComposerAssetAdapter } from './emailComposerShared.ts'
 
 declare const require: ((moduleName: string) => any) | undefined
 
@@ -79,37 +78,29 @@ function logForwardProxyResponse(response: any, via: 'fetchSyncPost' | 'nativeFe
 }
 
 /**
- * 构建移动端可用的 assetReader 依赖
+ * 构建移动端可用的邮件组装资源适配器
  * 通过思源内核 API 读取资源文件
  */
-function createMobileDeps(): EmailComposerDeps {
+function createMobileComposerAdapter(): EmailComposerAssetAdapter<HttpEmailAttachment, string, string> {
   const wsDir = (window as any).siyuan?.config?.system?.workspaceDir || ''
+  const toWorkspaceRelativePath = (absPath: string) => {
+    return absPath.startsWith(wsDir)
+      ? absPath.slice(wsDir.length)
+      : absPath
+  }
 
   return {
-    existsSync: (_absPath: string) => {
-      // 同步接口不适用于移动端，composeBodyEmail 中的 existsSync 调用需要改为异步
-      // 这里返回 false，由异步路径处理
-      return false
-    },
-    readFileSync: (_absPath: string) => {
-      throw new Error('Use readAssetAsync on mobile')
-    },
-    readAssetAsync: async (absPath: string) => {
-      // 从绝对路径推导出工作空间相对路径
-      const wsRelativePath = absPath.startsWith(wsDir)
-        ? absPath.slice(wsDir.length)
-        : absPath
-      return readAsset(absPath, wsRelativePath)
-    },
-    assetExistsAsync: async (absPath: string) => {
-      const wsRelativePath = absPath.startsWith(wsDir)
-        ? absPath.slice(wsDir.length)
-        : absPath
-      return assetExists(absPath, wsRelativePath)
-    },
-    getWorkspacePath: (relativePath: string) => {
-      return `${wsDir}/data/${relativePath}`
-    },
+    getWorkspacePath: relativePath => `${wsDir}/data/${relativePath}`,
+    basename: assetPath => assetPath.split('/').pop() || assetPath,
+    assetExists: async absPath => assetExists(absPath, toWorkspaceRelativePath(absPath)),
+    readAsset: async absPath => readAsset(absPath, toWorkspaceRelativePath(absPath)),
+    createInlineAttachment: async ({ assetPath, cid, asset }) => ({
+      filename: assetPath.split('/').pop() || 'image',
+      content: asset.base64,
+      contentId: cid,
+    }),
+    createArchiveContent: zip => zip.generateAsync({ type: 'base64' }),
+    createTextContent: text => btoa(unescape(encodeURIComponent(text))),
   }
 }
 
@@ -292,11 +283,11 @@ export async function sendEmailViaHttp(options: SendEmailOptions): Promise<void>
     throw new Error('NO_ENDPOINT')
   }
 
-  const deps = createMobileDeps()
+  const composerAdapter = createMobileComposerAdapter()
   const fromAddress = DEFAULT_RESEND_FROM
 
   if (mode === 'body') {
-    const { html, attachments } = await composeBodyEmailAsync(htmlContent, deps)
+    const { html, attachments } = await composeBodyEmailWithAdapter(htmlContent, composerAdapter)
     await sendViaResend(endpoint, httpConfig.httpApiKey, {
       from: fromAddress,
       to,
@@ -306,7 +297,7 @@ export async function sendEmailViaHttp(options: SendEmailOptions): Promise<void>
     })
   }
   else {
-    const { text, attachments } = await composeAttachmentEmailAsync(docTitle, mdContent, deps)
+    const { text, attachments } = await composeAttachmentEmailWithAdapter(docTitle, mdContent, composerAdapter)
     await sendViaResend(endpoint, httpConfig.httpApiKey, {
       from: fromAddress,
       to,
@@ -314,132 +305,5 @@ export async function sendEmailViaHttp(options: SendEmailOptions): Promise<void>
       text,
       attachments,
     })
-  }
-}
-
-/**
- * 异步版本的 composeBodyEmail —— 适配移动端无 fs 场景
- */
-async function composeBodyEmailAsync(
-  htmlContent: string | undefined,
-  deps: EmailComposerDeps,
-) {
-  const finalHtml = htmlContent || '<p>（无内容）</p>'
-  const attachments: HttpEmailAttachment[] = []
-
-  if (!deps.readAssetAsync || !deps.assetExistsAsync) {
-    // 回退到同步模式（桌面端）
-    return composeBodyEmail(htmlContent, deps)
-  }
-
-  const HTML_ASSET_REGEX = /src=(["'])([^"']+)\1/g
-  const assetMap = new Map<string, string>()
-  let cidCounter = 0
-
-  // 收集所有 asset 引用
-  const matches: Array<{ full: string, quote: string, assetPath: string }> = []
-  let match: RegExpExecArray | null
-  while ((match = HTML_ASSET_REGEX.exec(finalHtml)) !== null) {
-    const assetPath = normalizeSiyuanAssetPath(match[2])
-    if (assetPath) {
-      matches.push({ full: match[0], quote: match[1], assetPath })
-    }
-  }
-
-  let resultHtml = finalHtml
-
-  for (const m of matches) {
-    if (assetMap.has(m.assetPath)) {
-      resultHtml = resultHtml.replace(m.full, `src=${m.quote}cid:${assetMap.get(m.assetPath)}${m.quote}`)
-      continue
-    }
-
-    const absPath = deps.getWorkspacePath(m.assetPath)
-    const exists = await deps.assetExistsAsync(absPath)
-    if (exists) {
-      const cid = `img_${cidCounter++}@siyuan.postman`
-      assetMap.set(m.assetPath, cid)
-      const asset = await deps.readAssetAsync(absPath)
-      attachments.push({
-        filename: m.assetPath.split('/').pop() || 'image',
-        content: asset.base64,
-        contentId: cid,
-      })
-      resultHtml = resultHtml.replace(m.full, `src=${m.quote}cid:${cid}${m.quote}`)
-    }
-  }
-
-  return { html: resultHtml, attachments }
-}
-
-function normalizeSiyuanAssetPath(src: string): string | null {
-  const trimmed = src.trim()
-  if (!trimmed || /^(https?:|data:|blob:|cid:)/i.test(trimmed)) {
-    return null
-  }
-
-  const cleanPath = trimmed.split(/[?#]/, 1)[0].replace(/\\/g, '/').replace(/^\/+/, '')
-  if (cleanPath.startsWith('data/assets/')) {
-    return cleanPath.slice('data/'.length)
-  }
-  if (cleanPath.startsWith('assets/')) {
-    return cleanPath
-  }
-  return null
-}
-
-/**
- * 异步版本的 composeAttachmentEmail —— 适配移动端无 fs 场景
- */
-async function composeAttachmentEmailAsync(
-  docTitle: string,
-  mdContent: string | undefined,
-  deps: EmailComposerDeps,
-) {
-  if (!deps.readAssetAsync || !deps.assetExistsAsync) {
-    return composeAttachmentEmail(docTitle, mdContent, deps)
-  }
-
-  const attachContent = mdContent || ''
-  const safeTitle = docTitle.replace(/[\\/:*?"<>|]/g, '_')
-  const allAssets = new Set<string>()
-
-  const MD_ASSET_REGEX = /!\[.*?\]\((assets\/[^)]+)\)/g
-  const HTML_ASSET_REGEX = /src="(assets\/[^"]+)"/g
-
-  let m: RegExpExecArray | null
-  while ((m = MD_ASSET_REGEX.exec(attachContent)) !== null) allAssets.add(m[1])
-  while ((m = HTML_ASSET_REGEX.exec(attachContent)) !== null) allAssets.add(m[1])
-
-  if (allAssets.size > 0) {
-    const zip = new JSZip()
-    zip.file(`${safeTitle}.md`, attachContent)
-
-    for (const assetPath of allAssets) {
-      const absPath = deps.getWorkspacePath(assetPath)
-      const exists = await deps.assetExistsAsync(absPath)
-      if (exists) {
-        const asset = await deps.readAssetAsync(absPath)
-        const buf = asset.buffer instanceof ArrayBuffer
-          ? asset.buffer
-          : new Uint8Array(asset.buffer as Buffer).buffer
-        zip.file(assetPath, buf)
-      }
-    }
-
-    const zipBase64 = await zip.generateAsync({ type: 'base64' })
-    return {
-      text: `请查阅附件：${safeTitle}.zip`,
-      attachments: [
-        { filename: `${safeTitle}.zip`, content: zipBase64, contentType: 'application/zip' },
-      ],
-    }
-  }
-
-  return {
-    text: `请查阅附件：${safeTitle}.md`,
-    attachments: [
-      { filename: `${safeTitle}.md`, content: btoa(unescape(encodeURIComponent(attachContent))), contentType: 'text/markdown; charset=utf-8' },
-    ],
   }
 }
