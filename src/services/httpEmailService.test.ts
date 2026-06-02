@@ -298,6 +298,10 @@ test('sendEmailViaHttp inlines mobile body images from SiYuan asset paths', asyn
     ['foo.png', 'bar.png'],
   )
   assert.deepEqual(
+    resendPayload.attachments.map((item: any) => item.contentType),
+    ['image/png', 'image/png'],
+  )
+  assert.deepEqual(
     resendPayload.attachments.map((item: any) => item.contentId),
     ['img_0@siyuan.postman', 'img_1@siyuan.postman'],
   )

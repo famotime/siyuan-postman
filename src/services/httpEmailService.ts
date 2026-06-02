@@ -77,6 +77,20 @@ function logForwardProxyResponse(response: any, via: 'fetchSyncPost' | 'nativeFe
   })
 }
 
+function getMimeType(filename: string): string {
+  const ext = filename.split('.').pop()?.toLowerCase() || ''
+  const mimeMap: Record<string, string> = {
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    gif: 'image/gif',
+    webp: 'image/webp',
+    svg: 'image/svg+xml',
+    bmp: 'image/bmp',
+  }
+  return mimeMap[ext] || 'application/octet-stream'
+}
+
 /**
  * 构建移动端可用的邮件组装资源适配器
  * 通过思源内核 API 读取资源文件
@@ -94,11 +108,15 @@ function createMobileComposerAdapter(): EmailComposerAssetAdapter<HttpEmailAttac
     basename: assetPath => assetPath.split('/').pop() || assetPath,
     assetExists: async absPath => assetExists(absPath, toWorkspaceRelativePath(absPath)),
     readAsset: async absPath => readAsset(absPath, toWorkspaceRelativePath(absPath)),
-    createInlineAttachment: async ({ assetPath, cid, asset }) => ({
-      filename: assetPath.split('/').pop() || 'image',
-      content: asset.base64,
-      contentId: cid,
-    }),
+    createInlineAttachment: async ({ assetPath, cid, asset }) => {
+      const filename = assetPath.split('/').pop() || 'image'
+      return {
+        filename,
+        content: asset.base64,
+        contentId: cid,
+        contentType: getMimeType(filename),
+      }
+    },
     createArchiveContent: zip => zip.generateAsync({ type: 'base64' }),
     createTextContent: text => btoa(unescape(encodeURIComponent(text))),
   }
