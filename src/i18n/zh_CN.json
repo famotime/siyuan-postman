@@ -48,7 +48,7 @@
   "topBarTitle": "邮递员",
   "topBarNeedDoc": "请先打开一个文档后再发送邮件",
   "settingHttpTitle": "HTTP 邮件 API",
-  "settingHttpBadge": "HTTP API",
+  "settingHttpBadge": "移动端设置",
   "settingHttpDesc": "通过 Resend HTTP API 发送邮件，移动端和桌面端均可使用。",
   "settingHttpApiKey": "Resend API Key",
   "settingHttpEndpoint": "自定义 Endpoint（可选）",

@@ -3,10 +3,11 @@
  * 通过 Resend REST API 发送邮件，不依赖 Node.js 模块
  */
 import JSZip from 'jszip'
-import { normalizeEmailConfig } from '../composables/useEmailConfig.ts'
 import type { EmailConfig } from '../composables/useEmailConfig.ts'
 import { composeAttachmentEmail, composeBodyEmail, type EmailComposerDeps } from './emailComposer.ts'
 import { assetExists, readAsset } from './assetReader.ts'
+
+declare const require: ((moduleName: string) => any) | undefined
 
 export type HttpEmailProvider = 'resend'
 
@@ -28,6 +29,47 @@ export interface SendEmailOptions {
 }
 
 const DEFAULT_ENDPOINT = 'https://api.resend.com/emails'
+const DEFAULT_RESEND_FROM = '"SiYuan Postman" <onboarding@resend.dev>'
+
+function getEmailDomain(value: unknown): string {
+  const text = typeof value === 'string' ? value : ''
+  const match = text.match(/<([^>]+)>$/)
+  const email = (match?.[1] || text).trim()
+  return email.includes('@') ? email.split('@').pop() || '' : ''
+}
+
+function logForwardProxyRequest(
+  endpoint: string,
+  body: Record<string, any>,
+  proxyPayload: Record<string, any>,
+  via: 'fetchSyncPost' | 'nativeFetch',
+) {
+  console.info('[Postman] HTTP 邮件代理请求参数', {
+    via,
+    endpoint,
+    payloadType: typeof proxyPayload.payload,
+    contentType: 'application/json',
+    hasInnerContentTypeHeader: Array.isArray(proxyPayload.headers)
+      && proxyPayload.headers.some((header: Record<string, string>) => header['Content-Type'] === 'application/json'),
+    fromDomain: getEmailDomain(body.from),
+    toCount: Array.isArray(body.to) ? body.to.length : 0,
+    hasHtml: typeof body.html === 'string' && body.html.length > 0,
+    hasText: typeof body.text === 'string' && body.text.length > 0,
+    attachmentCount: Array.isArray(body.attachments) ? body.attachments.length : 0,
+  })
+}
+
+function logForwardProxyResponse(response: any, via: 'fetchSyncPost' | 'nativeFetch') {
+  console.info('[Postman] HTTP 邮件代理响应摘要', {
+    via,
+    code: response?.code,
+    status: response?.data?.status,
+    contentType: response?.data?.contentType,
+    bodyPreview: typeof response?.data?.body === 'string'
+      ? response.data.body.slice(0, 300)
+      : '',
+  })
+}
 
 /**
  * 构建移动端可用的 assetReader 依赖
@@ -78,14 +120,16 @@ async function postSiyuanApi(url: string, data: unknown): Promise<any> {
   }
 
   try {
-    const siyuan = await import('siyuan')
-    if (siyuan && typeof siyuan.fetchSyncPost === 'function') {
-      return await siyuan.fetchSyncPost(url, data)
+    const runtimeRequire = typeof require === 'function'
+      ? require
+      : (typeof window !== 'undefined' && typeof (window as any).require === 'function' ? (window as any).require : null)
+    const fetchSyncPost = runtimeRequire?.('siyuan')?.fetchSyncPost
+    if (typeof fetchSyncPost === 'function') {
+      return await fetchSyncPost(url, data)
     }
   }
   catch (error) {
-    // 移动端 WebView 环境下，siyuan npm 模块可能加载失败，打印日志并降级
-    console.warn('[Postman] 导入 siyuan SDK 模块失败，将降级使用原生 fetch 转发。', error)
+    console.warn('[Postman] siyuan SDK fetchSyncPost 不可用，将降级使用原生 fetch 转发。', error)
   }
   return null
 }
@@ -99,6 +143,11 @@ async function postJsonViaSiyuanForwardProxy(
   apiKey: string,
   body: Record<string, any>,
 ): Promise<void> {
+  const resendBody = {
+    ...body,
+    from: DEFAULT_RESEND_FROM,
+  }
+
   const payload = {
     url: endpoint,
     method: 'POST',
@@ -106,15 +155,15 @@ async function postJsonViaSiyuanForwardProxy(
     contentType: 'application/json',
     headers: [
       { Authorization: `Bearer ${apiKey}` },
+      { 'Content-Type': 'application/json' },
     ],
-    payload: JSON.stringify(body),
-    payloadEncoding: 'text',
-    responseEncoding: 'text',
+    payload: JSON.stringify(resendBody),
   }
 
   // 1. 优先尝试使用思源官方 SDK 的 fetchSyncPost 方法发送代理请求
   let response: any = null
   try {
+    logForwardProxyRequest(endpoint, resendBody, payload, 'fetchSyncPost')
     response = await postSiyuanApi('/api/network/forwardProxy', payload)
   }
   catch (error) {
@@ -123,6 +172,7 @@ async function postJsonViaSiyuanForwardProxy(
 
   // 2. 如果官方 SDK 返回了有效响应，则直接处理该响应（一般用于桌面端或支持官方 API 调用环境）
   if (response !== null) {
+    logForwardProxyResponse(response, 'fetchSyncPost')
     if (response?.code !== 0) {
       throw new Error(`HTTP_EMAIL_PROXY: ${response?.msg || 'forwardProxy failed'}`)
     }
@@ -159,6 +209,7 @@ async function postJsonViaSiyuanForwardProxy(
   }
 
   const responseJson = await fetchRes.json()
+  logForwardProxyResponse(responseJson, 'nativeFetch')
 
   if (responseJson?.code !== 0) {
     throw new Error(`HTTP_EMAIL_PROXY: ${responseJson?.msg || 'forwardProxy failed'}`)
@@ -219,8 +270,7 @@ async function sendViaResend(
  * 发送邮件（移动端入口）
  */
 export async function sendEmailViaHttp(options: SendEmailOptions): Promise<void> {
-  const { config, httpConfig, to, subject, mode, docTitle, htmlContent, mdContent } = options
-  const normalizedConfig = normalizeEmailConfig(config)
+  const { httpConfig, to, subject, mode, docTitle, htmlContent, mdContent } = options
 
   if (!httpConfig.httpApiKey) {
     throw new Error('NO_HTTP_API_KEY')
@@ -234,9 +284,7 @@ export async function sendEmailViaHttp(options: SendEmailOptions): Promise<void>
   }
 
   const deps = createMobileDeps()
-  const fromAddress = normalizedConfig.fromName
-    ? `"${normalizedConfig.fromName}" <${normalizedConfig.user || 'onboarding@resend.dev'}>`
-    : (normalizedConfig.user || 'onboarding@resend.dev')
+  const fromAddress = DEFAULT_RESEND_FROM
 
   if (mode === 'body') {
     const { html, attachments } = await composeBodyEmailAsync(htmlContent, deps)

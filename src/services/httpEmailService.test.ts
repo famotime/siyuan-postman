@@ -65,9 +65,15 @@ test('sendEmailViaHttp posts Resend request through SiYuan forwardProxy when ava
   assert.equal(calls[0].data.contentType, 'application/json')
   assert.deepEqual(calls[0].data.headers, [
     { Authorization: 'Bearer re_test' },
+    { 'Content-Type': 'application/json' },
   ])
   assert.equal(typeof calls[0].data.payload, 'string')
-  assert.equal(JSON.parse(calls[0].data.payload).subject, 'Hello')
+  const resendPayload = JSON.parse(calls[0].data.payload)
+  assert.equal(resendPayload.subject, 'Hello')
+  assert.equal(resendPayload.from, '"SiYuan Postman" <onboarding@resend.dev>')
+  assert.deepEqual(resendPayload.to, ['to@example.com'])
+  assert.equal('payloadEncoding' in calls[0].data, false)
+  assert.equal('responseEncoding' in calls[0].data, false)
 })
 
 test('sendEmailViaHttp reports proxy failure without falling back to direct fetch', async () => {
@@ -201,7 +207,10 @@ test('sendEmailViaHttp falls back to native fetch when fetchSyncPost is unavaila
   assert.equal(payload.contentType, 'application/json')
   assert.deepEqual(payload.headers, [
     { Authorization: 'Bearer re_test' },
+    { 'Content-Type': 'application/json' },
   ])
   assert.equal(typeof payload.payload, 'string')
   assert.equal(JSON.parse(payload.payload).subject, 'Hello Native Fetch')
+  assert.equal('payloadEncoding' in payload, false)
+  assert.equal('responseEncoding' in payload, false)
 })

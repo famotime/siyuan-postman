@@ -381,6 +381,10 @@ watch(() => props.mode, (value) => {
 })
 
 watch(() => activeAccount.value?.lastTo, (value) => {
+  if (!isElectron) {
+    return
+  }
+
   if (!selectedRecipients.value.length && value) {
     selectedRecipients.value = value
       .split(/[，,]/)
@@ -466,15 +470,17 @@ async function handleSend() {
 
     const lastToValue = toList.join(', ')
     recentRecipients.value = addRecentRecipients(toList)
-    try {
-      await saveEmailConfig({
-        ...config,
-        lastTo: lastToValue,
-        hasSentSuccessfully: true,
-      })
-    }
-    catch {
-      // 保持发送成功结果，不因本地缓存失败打断流程。
+    if (isElectron && config) {
+      try {
+        await saveEmailConfig({
+          ...config,
+          lastTo: lastToValue,
+          hasSentSuccessfully: true,
+        })
+      }
+      catch {
+        // 保持发送成功结果，不因本地缓存失败打断流程。
+      }
     }
 
     statusMsg.value = props.i18n.dialogSuccess

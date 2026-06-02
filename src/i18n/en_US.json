@@ -48,7 +48,7 @@
   "topBarTitle": "Postman",
   "topBarNeedDoc": "Please open a document before sending email",
   "settingHttpTitle": "HTTP Email API",
-  "settingHttpBadge": "HTTP API",
+  "settingHttpBadge": "For Mobile",
   "settingHttpDesc": "Send emails via Resend HTTP API, available on both mobile and desktop.",
   "settingHttpApiKey": "Resend API Key",
   "settingHttpEndpoint": "Custom Endpoint (optional)",
