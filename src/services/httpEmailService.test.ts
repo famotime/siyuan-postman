@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
+import JSZip from 'jszip'
 import { sendEmailViaHttp } from './httpEmailService.ts'
 
 test('sendEmailViaHttp posts Resend request through SiYuan forwardProxy when available', async () => {
@@ -213,4 +214,179 @@ test('sendEmailViaHttp falls back to native fetch when fetchSyncPost is unavaila
   assert.equal(JSON.parse(payload.payload).subject, 'Hello Native Fetch')
   assert.equal('payloadEncoding' in payload, false)
   assert.equal('responseEncoding' in payload, false)
+})
+
+test('sendEmailViaHttp inlines mobile body images from SiYuan asset paths', async () => {
+  const calls: Array<{ url: string, data: any }> = []
+  const assetStatPaths: string[] = []
+  const fileReadPaths: string[] = []
+
+  ;(globalThis as any).window = {
+    siyuan: { config: { system: { workspaceDir: '/workspace' } } },
+  }
+  ;(globalThis as any).__POSTMAN_FETCH_SYNC_POST__ = async (url: string, data: any) => {
+    if (url === '/api/asset/statAsset') {
+      assetStatPaths.push(data.path)
+      return { code: 0, data: {} }
+    }
+
+    calls.push({ url, data })
+    return {
+      code: 0,
+      msg: '',
+      data: {
+        status: 200,
+        body: '{"id":"email_with_image"}',
+        contentType: 'application/json',
+        headers: {},
+        url: data.url,
+      },
+    }
+  }
+
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = (async (url: string, options: any) => {
+    assert.equal(url, '/api/file/getFile')
+    fileReadPaths.push(JSON.parse(options.body).path)
+    return {
+      ok: true,
+      arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer,
+    } as any
+  }) as any
+
+  try {
+    await sendEmailViaHttp({
+      config: {
+        id: 'acct_1',
+        preset: 'custom',
+        host: '',
+        port: 465,
+        secure: true,
+        user: 'sender@example.com',
+        password: '',
+        fromName: 'Sender',
+        lastTo: '',
+        hasSentSuccessfully: false,
+      },
+      httpConfig: {
+        httpProvider: 'resend',
+        httpApiKey: 're_test',
+      },
+      to: ['to@example.com'],
+      subject: 'Hello Images',
+      mode: 'body',
+      docTitle: 'Doc',
+      htmlContent: '<p><img src="/assets/foo.png"><img src="assets/bar.png"></p>',
+    })
+  }
+  finally {
+    globalThis.fetch = originalFetch
+    delete (globalThis as any).__POSTMAN_FETCH_SYNC_POST__
+  }
+
+  assert.deepEqual(assetStatPaths, ['/data/assets/foo.png', '/data/assets/bar.png'])
+  assert.deepEqual(fileReadPaths, ['/data/assets/foo.png', '/data/assets/bar.png'])
+
+  assert.equal(calls.length, 1)
+  const resendPayload = JSON.parse(calls[0].data.payload)
+  assert.match(resendPayload.html, /src="cid:img_0@siyuan\.postman"/)
+  assert.match(resendPayload.html, /src="cid:img_1@siyuan\.postman"/)
+  assert.equal(resendPayload.attachments.length, 2)
+  assert.deepEqual(
+    resendPayload.attachments.map((item: any) => item.filename),
+    ['foo.png', 'bar.png'],
+  )
+  assert.deepEqual(
+    resendPayload.attachments.map((item: any) => item.contentId),
+    ['img_0@siyuan.postman', 'img_1@siyuan.postman'],
+  )
+})
+
+test('sendEmailViaHttp zips mobile attachment images through native fetch when SiYuan SDK is unavailable', async () => {
+  const nativeFetchCalls: Array<{ url: string, options: any }> = []
+  const assetStatPaths: string[] = []
+  const fileReadPaths: string[] = []
+
+  ;(globalThis as any).window = {
+    siyuan: { config: { system: { workspaceDir: '/workspace' } } },
+    location: { origin: 'http://127.0.0.1:6806' },
+  }
+
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = (async (url: string, options: any) => {
+    if (url.endsWith('/api/asset/statAsset')) {
+      assetStatPaths.push(JSON.parse(options.body).path)
+      return {
+        ok: true,
+        json: async () => ({ code: 0, data: {} }),
+      } as any
+    }
+
+    if (url === '/api/file/getFile') {
+      fileReadPaths.push(JSON.parse(options.body).path)
+      return {
+        ok: true,
+        arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer,
+      } as any
+    }
+
+    nativeFetchCalls.push({ url, options })
+    return {
+      ok: true,
+      json: async () => ({
+        code: 0,
+        msg: '',
+        data: {
+          status: 200,
+          body: '{"id":"email_with_zip"}',
+          contentType: 'application/json',
+          headers: {},
+          url: 'https://api.resend.com/emails',
+        },
+      }),
+    } as any
+  }) as any
+
+  try {
+    await sendEmailViaHttp({
+      config: {
+        id: 'acct_1',
+        preset: 'custom',
+        host: '',
+        port: 465,
+        secure: true,
+        user: 'sender@example.com',
+        password: '',
+        fromName: 'Sender',
+        lastTo: '',
+        hasSentSuccessfully: false,
+      },
+      httpConfig: {
+        httpProvider: 'resend',
+        httpApiKey: 're_test',
+      },
+      to: ['to@example.com'],
+      subject: 'Hello Zip Images',
+      mode: 'attachment',
+      docTitle: 'Doc',
+      mdContent: '正文\n\n![](assets/640_8fe627098fd7-20260529215204-p154g0v.png)',
+    })
+  }
+  finally {
+    globalThis.fetch = originalFetch
+    delete (globalThis as any).window.location
+  }
+
+  assert.deepEqual(assetStatPaths, ['/data/assets/640_8fe627098fd7-20260529215204-p154g0v.png'])
+  assert.deepEqual(fileReadPaths, ['/data/assets/640_8fe627098fd7-20260529215204-p154g0v.png'])
+
+  assert.equal(nativeFetchCalls.length, 1)
+  const proxyPayload = JSON.parse(nativeFetchCalls[0].options.body)
+  const resendPayload = JSON.parse(proxyPayload.payload)
+  assert.equal(resendPayload.attachments.length, 1)
+  assert.equal(resendPayload.attachments[0].filename, 'Doc.zip')
+
+  const zip = await JSZip.loadAsync(resendPayload.attachments[0].content, { base64: true })
+  assert.ok(zip.file('Doc.md'))
+  assert.ok(zip.file('assets/640_8fe627098fd7-20260529215204-p154g0v.png'))
 })

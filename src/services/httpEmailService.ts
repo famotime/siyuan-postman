@@ -31,6 +31,13 @@ export interface SendEmailOptions {
 const DEFAULT_ENDPOINT = 'https://api.resend.com/emails'
 const DEFAULT_RESEND_FROM = '"SiYuan Postman" <onboarding@resend.dev>'
 
+interface HttpEmailAttachment {
+  filename: string
+  content: string
+  contentType?: string
+  contentId?: string
+}
+
 function getEmailDomain(value: unknown): string {
   const text = typeof value === 'string' ? value : ''
   const match = text.match(/<([^>]+)>$/)
@@ -236,7 +243,7 @@ async function sendViaResend(
     subject: string
     html?: string
     text?: string
-    attachments?: Array<{ filename: string, content: string, contentType?: string }>
+    attachments?: HttpEmailAttachment[]
   },
 ): Promise<void> {
   const body: Record<string, any> = {
@@ -251,6 +258,8 @@ async function sendViaResend(
     body.attachments = payload.attachments.map(att => ({
       filename: att.filename,
       content: att.content, // base64
+      contentType: att.contentType,
+      contentId: att.contentId,
     }))
   }
 
@@ -316,29 +325,32 @@ async function composeBodyEmailAsync(
   deps: EmailComposerDeps,
 ) {
   const finalHtml = htmlContent || '<p>（无内容）</p>'
-  const attachments: Array<{ filename: string, content: string, contentType?: string }> = []
+  const attachments: HttpEmailAttachment[] = []
 
   if (!deps.readAssetAsync || !deps.assetExistsAsync) {
     // 回退到同步模式（桌面端）
     return composeBodyEmail(htmlContent, deps)
   }
 
-  const HTML_ASSET_REGEX = /src="(assets\/[^"]+)"/g
+  const HTML_ASSET_REGEX = /src=(["'])([^"']+)\1/g
   const assetMap = new Map<string, string>()
   let cidCounter = 0
 
   // 收集所有 asset 引用
-  const matches: Array<{ full: string, assetPath: string }> = []
+  const matches: Array<{ full: string, quote: string, assetPath: string }> = []
   let match: RegExpExecArray | null
   while ((match = HTML_ASSET_REGEX.exec(finalHtml)) !== null) {
-    matches.push({ full: match[0], assetPath: match[1] })
+    const assetPath = normalizeSiyuanAssetPath(match[2])
+    if (assetPath) {
+      matches.push({ full: match[0], quote: match[1], assetPath })
+    }
   }
 
   let resultHtml = finalHtml
 
   for (const m of matches) {
     if (assetMap.has(m.assetPath)) {
-      resultHtml = resultHtml.replace(m.full, `src="cid:${assetMap.get(m.assetPath)}"`)
+      resultHtml = resultHtml.replace(m.full, `src=${m.quote}cid:${assetMap.get(m.assetPath)}${m.quote}`)
       continue
     }
 
@@ -351,12 +363,29 @@ async function composeBodyEmailAsync(
       attachments.push({
         filename: m.assetPath.split('/').pop() || 'image',
         content: asset.base64,
+        contentId: cid,
       })
-      resultHtml = resultHtml.replace(m.full, `src="cid:${cid}"`)
+      resultHtml = resultHtml.replace(m.full, `src=${m.quote}cid:${cid}${m.quote}`)
     }
   }
 
   return { html: resultHtml, attachments }
+}
+
+function normalizeSiyuanAssetPath(src: string): string | null {
+  const trimmed = src.trim()
+  if (!trimmed || /^(https?:|data:|blob:|cid:)/i.test(trimmed)) {
+    return null
+  }
+
+  const cleanPath = trimmed.split(/[?#]/, 1)[0].replace(/\\/g, '/').replace(/^\/+/, '')
+  if (cleanPath.startsWith('data/assets/')) {
+    return cleanPath.slice('data/'.length)
+  }
+  if (cleanPath.startsWith('assets/')) {
+    return cleanPath
+  }
+  return null
 }
 
 /**

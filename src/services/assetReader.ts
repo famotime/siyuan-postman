@@ -15,8 +15,32 @@ async function postSiyuanApi(url: string, data: unknown): Promise<any> {
     return testFetchSyncPost(url, data)
   }
 
-  const siyuan = await import('siyuan')
-  return siyuan.fetchSyncPost(url, data)
+  try {
+    const siyuan = await import('siyuan')
+    if (typeof siyuan.fetchSyncPost === 'function') {
+      return siyuan.fetchSyncPost(url, data)
+    }
+  }
+  catch (error) {
+    console.warn('[Postman] assetReader 导入 siyuan SDK 失败，将使用原生 fetch 调用思源 API。', error)
+  }
+
+  let baseUrl = ''
+  if (typeof window !== 'undefined' && window.location?.origin && window.location.origin !== 'file://') {
+    baseUrl = window.location.origin
+  }
+
+  const response = await fetch(`${baseUrl}${url}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+
+  if (!response.ok) {
+    throw new Error(`SiYuan API request failed: ${response.status} ${response.statusText}`)
+  }
+
+  return response.json()
 }
 
 function isElectronEnv(): boolean {
