@@ -107,7 +107,7 @@ async function postJsonViaSiyuanForwardProxy(
     headers: [
       { Authorization: `Bearer ${apiKey}` },
     ],
-    payload: body,
+    payload: JSON.stringify(body),
     payloadEncoding: 'text',
     responseEncoding: 'text',
   }

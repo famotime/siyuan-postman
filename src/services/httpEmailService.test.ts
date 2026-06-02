@@ -66,7 +66,8 @@ test('sendEmailViaHttp posts Resend request through SiYuan forwardProxy when ava
   assert.deepEqual(calls[0].data.headers, [
     { Authorization: 'Bearer re_test' },
   ])
-  assert.equal(calls[0].data.payload.subject, 'Hello')
+  assert.equal(typeof calls[0].data.payload, 'string')
+  assert.equal(JSON.parse(calls[0].data.payload).subject, 'Hello')
 })
 
 test('sendEmailViaHttp reports proxy failure without falling back to direct fetch', async () => {
@@ -201,5 +202,6 @@ test('sendEmailViaHttp falls back to native fetch when fetchSyncPost is unavaila
   assert.deepEqual(payload.headers, [
     { Authorization: 'Bearer re_test' },
   ])
-  assert.equal(payload.payload.subject, 'Hello Native Fetch')
+  assert.equal(typeof payload.payload, 'string')
+  assert.equal(JSON.parse(payload.payload).subject, 'Hello Native Fetch')
 })
