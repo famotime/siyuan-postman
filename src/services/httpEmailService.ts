@@ -12,6 +12,7 @@ export interface HttpEmailConfig {
   httpProvider: HttpEmailProvider
   httpApiKey: string
   httpEndpoint?: string // 可选自定义 endpoint
+  useResendOnDesktop?: boolean
 }
 
 export interface SendEmailOptions {

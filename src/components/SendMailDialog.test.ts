@@ -17,7 +17,7 @@ test('dialog uses last successful recipients as default and persists them on suc
   assert.match(source, /watch\(\(\)\s*=>\s*activeAccount\.value\?\.lastTo,\s*\(value\)\s*=>\s*\{/)
   assert.match(source, /if\s*\(!isElectron\)\s*\{\s*return\s*\}/)
   assert.match(source, /const\s+lastToValue\s*=\s*toList\.join\(', '\)/)
-  assert.match(source, /if\s*\(isElectron\s*&&\s*config\)\s*\{[\s\S]*await\s+saveEmailConfig\(\{\s*\.\.\.config,\s*lastTo:\s*lastToValue,\s*hasSentSuccessfully:\s*true,\s*\}\)/)
+  assert.match(source, /if\s*\(isElectron\s*&&\s*config\s*&&\s*!useHttpSending\.value\)\s*\{[\s\S]*await\s+saveEmailConfig\(\{\s*\.\.\.config,\s*lastTo:\s*lastToValue,\s*hasSentSuccessfully:\s*true,\s*\}\)/)
 })
 
 test('dialog parses recipients with both Chinese and English commas', () => {
@@ -40,6 +40,21 @@ test('dialog renders current provider badge with preset icon', () => {
     'providerBadge.secondary',
     'EMAIL_PRESET_ICONS',
     'EMAIL_PRESET_UI_META',
+  ]) {
+    assert.notEqual(source.indexOf(token), -1)
+  }
+})
+
+test('desktop dialog can route through Resend when http setting is enabled', () => {
+  const source = readFileSync(new URL('./SendMailDialog.vue', import.meta.url), 'utf8')
+
+  for (const token of [
+    'const useHttpSending = computed(() => !isElectron || httpConfigRef.value.useResendOnDesktop)',
+    'v-if="isElectron && !useHttpSending"',
+    'if (!useHttpSending.value)',
+    'httpConfig: useHttpSending.value ? {',
+    'httpApiKey: httpConfigRef.value.httpApiKey',
+    't(\'dialogHttpMode\', \'HTTP API 模式\')',
   ]) {
     assert.notEqual(source.indexOf(token), -1)
   }

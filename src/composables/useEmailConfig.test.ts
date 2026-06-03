@@ -4,10 +4,13 @@ import test from 'node:test'
 import {
   EMAIL_PRESETS,
   bindPlugin,
+  loadHttpEmailConfig,
   loadEmailConfig,
   normalizeEmailConfig,
   removeEmailConfig,
+  saveHttpEmailConfig,
   setActiveEmailConfig,
+  useHttpEmailConfig,
   useEmailConfig,
 } from './useEmailConfig.ts'
 
@@ -146,4 +149,41 @@ test('removeEmailConfig drops account and reselects another active id', async ()
   assert.equal(state.activeId, 'acct_b')
   assert.equal(saved.length > 0, true)
   assert.equal(saved[saved.length - 1].activeId, 'acct_b')
+})
+
+test('loadHttpEmailConfig defaults desktop Resend usage to disabled', async () => {
+  const plugin = {
+    loadData: async () => ({
+      httpProvider: 'resend',
+      httpApiKey: 're_demo',
+      httpEndpoint: '',
+      httpTestEmail: 'to@example.com',
+    }),
+    saveData: async () => {},
+  }
+
+  bindPlugin(plugin as any)
+  const state = await loadHttpEmailConfig()
+
+  assert.equal(state.useResendOnDesktop, false)
+})
+
+test('saveHttpEmailConfig persists desktop Resend usage flag', async () => {
+  const saved: any[] = []
+  const plugin = {
+    loadData: async () => null,
+    saveData: async (_key: string, data: any) => saved.push(data),
+  }
+
+  bindPlugin(plugin as any)
+  await saveHttpEmailConfig({
+    httpProvider: 'resend',
+    httpApiKey: 're_demo',
+    httpEndpoint: '',
+    httpTestEmail: '',
+    useResendOnDesktop: true,
+  })
+
+  assert.equal(useHttpEmailConfig().value.useResendOnDesktop, true)
+  assert.equal(saved[saved.length - 1].useResendOnDesktop, true)
 })

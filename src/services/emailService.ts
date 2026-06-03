@@ -7,6 +7,7 @@ import type { EmailConfig } from '@/composables/useEmailConfig'
 import { isElectronEnv } from '@/utils/env'
 import PluginInfoString from '@/../plugin.json'
 import { composeAttachmentEmailWithAdapter, composeBodyEmailWithAdapter } from './emailComposerShared'
+import { shouldUseHttpEmailRoute } from './emailRoute'
 import { sendEmailViaHttp, type HttpEmailConfig } from './httpEmailService'
 
 /** 发送模式 */
@@ -142,23 +143,25 @@ async function sendEmailViaSmtp(options: SendEmailOptions): Promise<void> {
  * 移动端：HTTP API (Resend)
  */
 export async function sendEmail(options: SendEmailOptions): Promise<void> {
-  if (isElectronEnv()) {
-    return sendEmailViaSmtp(options)
+  const isDesktop = isElectronEnv()
+  const useHttpRoute = shouldUseHttpEmailRoute(isDesktop, options.httpConfig)
+
+  if (useHttpRoute) {
+    if (!options.httpConfig) {
+      throw new Error('NO_HTTP_CONFIG')
+    }
+
+    return sendEmailViaHttp({
+      config: options.config,
+      httpConfig: options.httpConfig,
+      to: options.to,
+      subject: options.subject,
+      mode: options.mode,
+      docTitle: options.docTitle,
+      htmlContent: options.htmlContent,
+      mdContent: options.mdContent,
+    })
   }
 
-  // 移动端：走 HTTP API
-  if (!options.httpConfig) {
-    throw new Error('NO_HTTP_CONFIG')
-  }
-
-  return sendEmailViaHttp({
-    config: options.config,
-    httpConfig: options.httpConfig,
-    to: options.to,
-    subject: options.subject,
-    mode: options.mode,
-    docTitle: options.docTitle,
-    htmlContent: options.htmlContent,
-    mdContent: options.mdContent,
-  })
+  return sendEmailViaSmtp(options)
 }

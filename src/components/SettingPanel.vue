@@ -231,6 +231,18 @@
           >
         </label>
 
+        <label class="postman-checkbox-row">
+          <input
+            v-model="httpForm.useResendOnDesktop"
+            class="b3-switch"
+            type="checkbox"
+          >
+          <span class="postman-checkbox-row__content">
+            <span class="postman-field__label">{{ t('settingHttpUseResendOnDesktop', 'PC 端也使用 Resend API 发送邮件') }}</span>
+            <span class="postman-checkbox-row__hint">{{ t('settingHttpUseResendOnDesktopHint', '关闭时 PC 端继续使用 SMTP；开启后 PC 端发送对话框会改用 Resend API。') }}</span>
+          </span>
+        </label>
+
         <div class="postman-http-section__hint">
           <span>{{ t('settingHttpApiKeyHint', '前往 resend.com 注册获取 API Key，免费版每月 3000 封。') }}</span>
         </div>
@@ -333,6 +345,7 @@ const httpConfigRef = useHttpEmailConfig()
 const httpForm = reactive({
   httpApiKey: httpConfigRef.value.httpApiKey,
   httpEndpoint: httpConfigRef.value.httpEndpoint,
+  useResendOnDesktop: httpConfigRef.value.useResendOnDesktop,
 })
 const showHttpApiKey = ref(false)
 const httpCollapsed = ref(!props.isMobile)
@@ -496,6 +509,7 @@ async function handleSaveAll() {
     httpApiKey: httpForm.httpApiKey,
     httpEndpoint: httpForm.httpEndpoint,
     httpTestEmail: testEmail.value.trim(),
+    useResendOnDesktop: httpForm.useResendOnDesktop,
   })
 
   savedMsg.value = t('settingSaveSuccess', '设置已保存')
@@ -656,6 +670,27 @@ async function handleRemove() {
   &:hover {
     background: color-mix(in srgb, var(--pm-accent) 10%, transparent);
     color: var(--pm-text-secondary);
+  }
+}
+
+.postman-checkbox-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 4px;
+  color: var(--pm-text);
+
+  &__content {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__hint {
+    color: var(--pm-text-muted);
+    font-size: 12px;
+    line-height: 1.5;
   }
 }
 

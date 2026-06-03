@@ -76,3 +76,16 @@ test('preset selector renders icon cards instead of plain text options', () => {
     assert.notEqual(source.indexOf(token), -1)
   }
 })
+
+test('http settings expose desktop Resend sending switch', () => {
+  const source = readFileSync(new URL('./SettingPanel.vue', import.meta.url), 'utf8')
+
+  for (const token of [
+    'v-model="httpForm.useResendOnDesktop"',
+    'settingHttpUseResendOnDesktop',
+    'settingHttpUseResendOnDesktopHint',
+    'useResendOnDesktop: httpForm.useResendOnDesktop',
+  ]) {
+    assert.notEqual(source.indexOf(token), -1)
+  }
+})

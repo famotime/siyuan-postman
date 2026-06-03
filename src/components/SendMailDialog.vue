@@ -69,7 +69,7 @@
         >
       </label>
 
-      <template v-if="isElectron">
+      <template v-if="isElectron && !useHttpSending">
         <label class="postman-field">
           <span class="postman-field__label">{{ t('dialogAccountLabel', '发件账号') }}</span>
           <div class="postman-select-wrap">
@@ -151,7 +151,7 @@
           class="postman-status postman-status--error"
         >
           <span class="postman-status__dot" />
-          <span>{{ isElectron ? i18n.noConfigError : t('noHttpConfigError', '请在设置中配置 Resend API Key 信息') }}</span>
+        <span>{{ useHttpSending ? t('noHttpConfigError', '请在设置中配置 Resend API Key 信息') : i18n.noConfigError }}</span>
         </div>
         <div
           v-else-if="statusMsg"
@@ -188,7 +188,7 @@
 
 <script setup lang="ts">
 import { EMAIL_PRESET_ICONS } from '@/assets/preset-icons'
-import { saveEmailConfig, setActiveEmailConfig, useEmailConfig, useHttpEmailConfig } from '@/composables/useEmailConfig'
+import { normalizeEmailConfig, saveEmailConfig, setActiveEmailConfig, useEmailConfig, useHttpEmailConfig } from '@/composables/useEmailConfig'
 import { initRecentRecipients, addRecentRecipients, getRecentRecipients } from '@/composables/useRecentRecipients'
 import type { SendMode } from '@/services/emailService'
 import { sendEmail } from '@/services/emailService'
@@ -216,6 +216,7 @@ const isElectron = isElectronEnv()
 
 const configState = useEmailConfig()
 const httpConfigRef = useHttpEmailConfig()
+const useHttpSending = computed(() => !isElectron || httpConfigRef.value.useResendOnDesktop)
 const selectedAccountId = ref('')
 const accountOptions = computed(() => {
   return configState.value.accounts.map(account => ({
@@ -365,7 +366,7 @@ const modeOptions = computed(() => ([
 ]))
 
 const configReady = computed(() => {
-  if (isElectron) {
+  if (!useHttpSending.value) {
     const config = activeAccount.value
     return Boolean(config?.host && config?.user && config?.password)
   }
@@ -422,7 +423,7 @@ async function handleSend() {
   }
 
   const config = activeAccount.value
-  if (isElectron) {
+  if (!useHttpSending.value) {
     if (!config?.host || !config?.user || !config?.password) {
       statusMsg.value = props.i18n.noConfigError
       statusType.value = 'error'
@@ -450,12 +451,13 @@ async function handleSend() {
     }
 
     await sendEmail({
-      config: config!,
-      httpConfig: isElectron ? undefined : {
+      config: config || normalizeEmailConfig(),
+      httpConfig: useHttpSending.value ? {
         httpProvider: httpConfigRef.value.httpProvider,
         httpApiKey: httpConfigRef.value.httpApiKey,
         httpEndpoint: httpConfigRef.value.httpEndpoint,
-      },
+        useResendOnDesktop: httpConfigRef.value.useResendOnDesktop,
+      } : undefined,
       to: toList,
       subject: subject.value || props.docTitle,
       mode: localMode.value,
@@ -466,7 +468,7 @@ async function handleSend() {
 
     const lastToValue = toList.join(', ')
     recentRecipients.value = addRecentRecipients(toList)
-    if (isElectron && config) {
+    if (isElectron && config && !useHttpSending.value) {
       try {
         await saveEmailConfig({
           ...config,
