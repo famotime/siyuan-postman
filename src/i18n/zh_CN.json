@@ -54,7 +54,6 @@
   "settingHttpEndpoint": "自定义 Endpoint（可选）",
   "settingHttpEndpointPlaceholder": "默认使用 https://api.resend.com/emails",
   "settingHttpUseResendOnDesktop": "PC 端也使用 Resend API 发送邮件",
-  "settingHttpUseResendOnDesktopHint": "关闭时 PC 端继续使用 SMTP；开启后 PC 端发送对话框会改用 Resend API。",
   "settingHttpApiKeyHint": "前往 resend.com 注册获取 API Key，免费版每月 3000 封。",
   "settingHttpRelayHint": "API Key 仅保存在本地插件数据中，不会上传。",
   "dialogHttpMode": "HTTP API 模式",

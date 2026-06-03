@@ -178,6 +178,17 @@
       <div v-show="!httpCollapsed">
         <p class="postman-http-section__desc">{{ t('settingHttpDesc', '通过 Resend HTTP API 发送邮件，移动端和桌面端均可使用。') }}</p>
 
+        <label class="postman-checkbox-row">
+          <input
+            v-model="httpForm.useResendOnDesktop"
+            class="b3-switch"
+            type="checkbox"
+          >
+          <span class="postman-checkbox-row__content">
+            <span class="postman-field__label">{{ t('settingHttpUseResendOnDesktop', 'PC 端也使用 Resend API 发送邮件') }}</span>
+          </span>
+        </label>
+
         <label class="postman-field">
           <span class="postman-field__label">{{ t('settingHttpApiKey', 'Resend API Key') }}</span>
           <span class="postman-password-wrap">
@@ -229,18 +240,6 @@
             type="text"
             :placeholder="t('settingHttpEndpointPlaceholder', '默认使用 https://api.resend.com/emails')"
           >
-        </label>
-
-        <label class="postman-checkbox-row">
-          <input
-            v-model="httpForm.useResendOnDesktop"
-            class="b3-switch"
-            type="checkbox"
-          >
-          <span class="postman-checkbox-row__content">
-            <span class="postman-field__label">{{ t('settingHttpUseResendOnDesktop', 'PC 端也使用 Resend API 发送邮件') }}</span>
-            <span class="postman-checkbox-row__hint">{{ t('settingHttpUseResendOnDesktopHint', '关闭时 PC 端继续使用 SMTP；开启后 PC 端发送对话框会改用 Resend API。') }}</span>
-          </span>
         </label>
 
         <div class="postman-http-section__hint">

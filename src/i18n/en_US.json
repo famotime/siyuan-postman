@@ -54,7 +54,6 @@
   "settingHttpEndpoint": "Custom Endpoint (optional)",
   "settingHttpEndpointPlaceholder": "Default: https://api.resend.com/emails",
   "settingHttpUseResendOnDesktop": "Use Resend API on PC too",
-  "settingHttpUseResendOnDesktopHint": "When off, PC keeps using SMTP. When on, the PC send dialog uses the Resend API.",
   "settingHttpApiKeyHint": "Get a free API Key at resend.com (3000 emails/month).",
   "settingHttpRelayHint": "API Key is stored only in this plugin on the current device.",
   "dialogHttpMode": "HTTP API Mode",

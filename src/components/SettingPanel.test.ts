@@ -83,9 +83,21 @@ test('http settings expose desktop Resend sending switch', () => {
   for (const token of [
     'v-model="httpForm.useResendOnDesktop"',
     'settingHttpUseResendOnDesktop',
-    'settingHttpUseResendOnDesktopHint',
     'useResendOnDesktop: httpForm.useResendOnDesktop',
   ]) {
     assert.notEqual(source.indexOf(token), -1)
   }
+
+  assert.equal(source.indexOf('settingHttpUseResendOnDesktopHint'), -1)
+})
+
+test('desktop Resend switch appears above the API key field', () => {
+  const source = readFileSync(new URL('./SettingPanel.vue', import.meta.url), 'utf8')
+
+  const switchIndex = source.indexOf('v-model="httpForm.useResendOnDesktop"')
+  const apiKeyIndex = source.indexOf('v-model="httpForm.httpApiKey"')
+
+  assert.notEqual(switchIndex, -1)
+  assert.notEqual(apiKeyIndex, -1)
+  assert.equal(switchIndex < apiKeyIndex, true)
 })
