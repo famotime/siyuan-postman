@@ -4,6 +4,7 @@
  */
 import { normalizeEmailConfig } from '@/composables/useEmailConfig'
 import type { EmailConfig } from '@/composables/useEmailConfig'
+import { isElectronEnv } from '@/utils/env'
 import PluginInfoString from '@/../plugin.json'
 import { composeAttachmentEmailWithAdapter, composeBodyEmailWithAdapter } from './emailComposerShared'
 import { sendEmailViaHttp, type HttpEmailConfig } from './httpEmailService'
@@ -21,22 +22,6 @@ export interface SendEmailOptions {
   docTitle: string     // 用于附件文件名
   htmlContent?: string // 正文模式使用
   mdContent?: string   // 附件模式使用
-}
-
-/**
- * 检测是否在 Electron 环境运行
- */
-function isElectronEnv(): boolean {
-  try {
-    return (
-      typeof process !== 'undefined'
-      && typeof process.versions === 'object'
-      && !!process.versions.electron
-    )
-  }
-  catch {
-    return false
-  }
 }
 
 /**

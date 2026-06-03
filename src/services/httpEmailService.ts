@@ -6,8 +6,6 @@ import type { EmailConfig } from '../composables/useEmailConfig.ts'
 import { assetExists, readAsset } from './assetReader.ts'
 import { composeAttachmentEmailWithAdapter, composeBodyEmailWithAdapter, type EmailComposerAssetAdapter } from './emailComposerShared.ts'
 
-declare const require: ((moduleName: string) => any) | undefined
-
 export type HttpEmailProvider = 'resend'
 
 export interface HttpEmailConfig {
@@ -123,11 +121,9 @@ function createMobileComposerAdapter(): EmailComposerAssetAdapter<HttpEmailAttac
 }
 
 /**
- * 通过 Resend API 发送邮件
- */
-/**
  * 调用思源笔记 Kernel API
- * 桌面端通过加载 siyuan SDK 模块进行本地调用，移动端如果无法加载该 SDK 模块，则返回 null 以便触发原生 fetch 降级。
+ * 优先使用测试钩子，其次尝试动态加载 siyuan SDK。
+ * 返回 null 表示 SDK 不可用，由调用方决定降级策略。
  */
 async function postSiyuanApi(url: string, data: unknown): Promise<any> {
   const testFetchSyncPost = (globalThis as any).__POSTMAN_FETCH_SYNC_POST__
@@ -136,16 +132,13 @@ async function postSiyuanApi(url: string, data: unknown): Promise<any> {
   }
 
   try {
-    const runtimeRequire = typeof require === 'function'
-      ? require
-      : (typeof window !== 'undefined' && typeof (window as any).require === 'function' ? (window as any).require : null)
-    const fetchSyncPost = runtimeRequire?.('siyuan')?.fetchSyncPost
-    if (typeof fetchSyncPost === 'function') {
-      return await fetchSyncPost(url, data)
+    const siyuan = await import('siyuan')
+    if (typeof siyuan.fetchSyncPost === 'function') {
+      return siyuan.fetchSyncPost(url, data)
     }
   }
-  catch (error) {
-    console.warn('[Postman] siyuan SDK fetchSyncPost 不可用，将降级使用原生 fetch 转发。', error)
+  catch {
+    // siyuan SDK 不可用
   }
   return null
 }

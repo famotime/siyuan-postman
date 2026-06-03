@@ -194,6 +194,7 @@ import type { SendMode } from '@/services/emailService'
 import { sendEmail } from '@/services/emailService'
 import { sanitizeMarkdownForEmail } from '@/services/markdownToEmailHtml'
 import { exportDocAsHtml, exportDocAsMarkdown } from '@/services/siyuanApi'
+import { isElectronEnv } from '@/utils/env'
 import { EMAIL_PRESET_UI_META, getPresetHostCaption, resolveActivePreset } from '@/utils/emailPresetUi'
 import { computed, ref, watch } from 'vue'
 
@@ -211,12 +212,7 @@ const emit = defineEmits<{
 
 const t = (key: string, fallback: string) => props.i18n[key] || fallback
 
-const isElectron = (() => {
-  try {
-    return typeof process !== 'undefined' && typeof process.versions === 'object' && !!process.versions.electron
-  }
-  catch { return false }
-})()
+const isElectron = isElectronEnv()
 
 const configState = useEmailConfig()
 const httpConfigRef = useHttpEmailConfig()

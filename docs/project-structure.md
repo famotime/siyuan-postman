@@ -21,12 +21,16 @@
 - `src/components/`：设置面板与发送弹窗组件
 - `src/components/SiyuanTheme/`：思源主题适配控件
 - `src/composables/useEmailConfig.ts`：SMTP 配置状态与持久化
-- `src/services/emailService.ts`：SMTP 发送流程
-- `src/services/emailComposer.ts`：正文与附件的内容构建
+- `src/services/emailService.ts`：邮件发送路由（桌面端 SMTP / 移动端 HTTP API）
+- `src/services/emailComposerShared.ts`：通过适配器模式的邮件组装（桌面端+移动端共用）
+- `src/services/httpEmailService.ts`：移动端 HTTP API 邮件发送（Resend）
+- `src/services/assetReader.ts`：平台无关的资源文件读取
 - `src/services/markdownToEmailHtml.ts`：Markdown 清洗与 HTML 渲染
 - `src/services/siyuanApi.ts`：思源 Kernel API 封装
 - `src/utils/emailPresetUi.ts`：预置邮箱 UI 元数据
 - `src/utils/dialogMount.ts`：Dialog 挂载与自动卸载
+- `src/utils/env.ts`：平台环境检测（Electron 等）
+- `src/utils/siyuanFetch.ts`：思源 API 统一调用封装
 - `src/i18n/`：多语言资源
 - `src/types/`：类型声明
 - `src/assets/preset-icons/`：邮箱预置图标

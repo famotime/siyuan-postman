@@ -1,9 +1,7 @@
 import JSZip from 'jszip'
 
-export interface AssetReaderResult {
-  base64: string
-  buffer: ArrayBuffer | Buffer
-}
+import type { AssetReaderResult } from './assetReader.ts'
+export type { AssetReaderResult }
 
 export interface EmailComposerAssetAdapter<InlineAttachment, ArchiveContent, TextContent> {
   getWorkspacePath: (assetPath: string) => string
