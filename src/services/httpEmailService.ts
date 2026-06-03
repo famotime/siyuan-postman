@@ -264,9 +264,9 @@ async function sendViaResend(
         filename: att.filename,
         content: att.content, // base64
       }
-      if (att.contentType) entry.contentType = att.contentType
-      // contentId 用于将附件与 HTML 中 cid: 引用关联，实现内联显示
-      if (att.contentId) entry.contentId = att.contentId
+      if (att.contentType) entry.content_type = att.contentType
+      // content_id 用于将附件与 HTML 中 cid: 引用关联，实现内联显示
+      if (att.contentId) entry.content_id = att.contentId
       return entry
     })
   }

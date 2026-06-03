@@ -298,13 +298,15 @@ test('sendEmailViaHttp inlines mobile body images from SiYuan asset paths', asyn
     ['foo.png', 'bar.png'],
   )
   assert.deepEqual(
-    resendPayload.attachments.map((item: any) => item.contentType),
+    resendPayload.attachments.map((item: any) => item.content_type),
     ['image/png', 'image/png'],
   )
   assert.deepEqual(
-    resendPayload.attachments.map((item: any) => item.contentId),
+    resendPayload.attachments.map((item: any) => item.content_id),
     ['img_0@siyuan.postman', 'img_1@siyuan.postman'],
   )
+  assert.equal('contentType' in resendPayload.attachments[0], false)
+  assert.equal('contentId' in resendPayload.attachments[0], false)
 })
 
 test('sendEmailViaHttp zips mobile attachment images through native fetch when SiYuan SDK is unavailable', async () => {
