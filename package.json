@@ -1,6 +1,6 @@
 {
   "name": "siyuan-postman",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "type": "module",
   "description": "Send SiYuan documents as email (body or attachment)",
   "author": "QuincyZou",
