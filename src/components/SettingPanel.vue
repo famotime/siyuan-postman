@@ -233,6 +233,16 @@
         </label>
 
         <label class="postman-field">
+          <span class="postman-field__label">{{ t('settingHttpFrom', 'Resend 发件地址') }}</span>
+          <input
+            v-model="httpForm.httpFrom"
+            class="b3-text-field postman-control"
+            type="text"
+            :placeholder="t('settingHttpFromPlaceholder', '&quot;SiYuan Postman&quot; &lt;noreply@example.com&gt;')"
+          >
+        </label>
+
+        <label class="postman-field">
           <span class="postman-field__label">{{ t('settingHttpEndpoint', '自定义 Endpoint（可选）') }}</span>
           <input
             v-model="httpForm.httpEndpoint"
@@ -276,30 +286,7 @@
       </div>
     </div>
 
-    <!-- 保存 -->
-    <footer class="postman-actions postman-actions--http">
-      <div class="postman-actions__left">
-        <p class="postman-actions__hint">{{ t('settingRelayHint', '邮箱信息仅保存在本地插件数据中，不会上传。') }}</p>
-      </div>
-
-      <div class="postman-actions__right">
-        <div class="postman-actions__btns">
-          <div
-            v-if="savedMsg"
-            class="postman-status postman-status--success"
-          >
-            <span class="postman-status__dot" />
-            <span>{{ savedMsg }}</span>
-          </div>
-          <button
-            class="b3-button postman-btn postman-btn--primary"
-            @click="handleSaveAll"
-          >
-            {{ t('settingSave', '保存设置') }}
-          </button>
-        </div>
-      </div>
-    </footer>
+    <p class="postman-actions__hint">{{ t('settingRelayHint', '邮箱信息仅保存在本地插件数据中，不会上传。') }}</p>
   </div>
 </template>
 
@@ -334,8 +321,10 @@ const selectedId = ref(
   || configRef.value.accounts[0]?.id
   || NEW_ACCOUNT_KEY,
 )
-const savedMsg = ref('')
 const showPassword = ref(false)
+let isHydratingForm = false
+let smtpAutoSaveTimer: number | undefined
+let httpAutoSaveTimer: number | undefined
 
 const t = (key: string, fallback: string) => props.i18n[key] || fallback
 
@@ -344,6 +333,7 @@ const httpConfigRef = useHttpEmailConfig()
 const httpForm = reactive({
   httpApiKey: httpConfigRef.value.httpApiKey,
   httpEndpoint: httpConfigRef.value.httpEndpoint,
+  httpFrom: httpConfigRef.value.httpFrom,
   useResendOnDesktop: httpConfigRef.value.useResendOnDesktop,
 })
 const showHttpApiKey = ref(false)
@@ -352,6 +342,43 @@ const smtpCollapsed = ref(false)
 const testEmail = ref(httpConfigRef.value.httpTestEmail || '')
 const testing = ref(false)
 const testResult = ref<{ ok: boolean, msg: string } | null>(null)
+
+async function saveHttpConfigNow() {
+  await saveHttpEmailConfig({
+    httpProvider: 'resend',
+    httpApiKey: httpForm.httpApiKey,
+    httpEndpoint: httpForm.httpEndpoint,
+    httpFrom: httpForm.httpFrom,
+    httpTestEmail: testEmail.value.trim(),
+    useResendOnDesktop: httpForm.useResendOnDesktop,
+  })
+}
+
+function scheduleHttpAutoSave() {
+  window.clearTimeout(httpAutoSaveTimer)
+  httpAutoSaveTimer = window.setTimeout(() => {
+    void saveHttpConfigNow()
+  }, 300)
+}
+
+async function saveSmtpConfigNow() {
+  if (props.isMobile) return
+  const normalized = normalizeEmailConfig({ ...form, secure: true })
+  await saveEmailConfig(normalized)
+  selectedId.value = normalized.id
+}
+
+function scheduleSmtpAutoSave() {
+  if (isHydratingForm || props.isMobile) return
+  if (selectedId.value === NEW_ACCOUNT_KEY && !form.host && !form.user && !form.password && !form.fromName) {
+    return
+  }
+
+  window.clearTimeout(smtpAutoSaveTimer)
+  smtpAutoSaveTimer = window.setTimeout(() => {
+    void saveSmtpConfigNow()
+  }, 500)
+}
 
 async function handleTestSend() {
   if (!httpForm.httpApiKey) {
@@ -391,6 +418,7 @@ async function handleTestSend() {
         httpProvider: 'resend',
         httpApiKey: httpForm.httpApiKey,
         httpEndpoint: httpForm.httpEndpoint,
+        httpFrom: httpForm.httpFrom,
       },
       to: [to],
       subject: 'SiYuan Postman - Test Email',
@@ -457,13 +485,17 @@ const presets = computed(() => {
 
 watch(selectedId, async (value) => {
   if (value === NEW_ACCOUNT_KEY) {
+    isHydratingForm = true
     Object.assign(form, normalizeEmailConfig())
+    isHydratingForm = false
     return
   }
 
   const account = configRef.value.accounts.find(item => item.id === value)
   if (account) {
+    isHydratingForm = true
     Object.assign(form, account)
+    isHydratingForm = false
     await setActiveEmailConfig(account.id)
   }
 }, { immediate: true })
@@ -486,6 +518,7 @@ watch(() => configRef.value.accounts, (accounts) => {
 function selectPreset(presetKey: string) {
   form.preset = presetKey
   applyPreset()
+  scheduleSmtpAutoSave()
 }
 
 function applyPreset() {
@@ -498,24 +531,9 @@ function applyPreset() {
   form.secure = true
 }
 
-async function handleSaveAll() {
-  const normalized = normalizeEmailConfig({ ...form, secure: true })
-  await saveEmailConfig(normalized)
-  selectedId.value = normalized.id
-
-  await saveHttpEmailConfig({
-    httpProvider: 'resend',
-    httpApiKey: httpForm.httpApiKey,
-    httpEndpoint: httpForm.httpEndpoint,
-    httpTestEmail: testEmail.value.trim(),
-    useResendOnDesktop: httpForm.useResendOnDesktop,
-  })
-
-  savedMsg.value = t('settingSaveSuccess', '设置已保存')
-  window.setTimeout(() => {
-    savedMsg.value = ''
-  }, 2500)
-}
+watch(form, scheduleSmtpAutoSave, { deep: true })
+watch(httpForm, scheduleHttpAutoSave, { deep: true })
+watch(testEmail, scheduleHttpAutoSave)
 
 async function handleRemove() {
   if (!canRemoveAccount.value || selectedId.value === NEW_ACCOUNT_KEY) {

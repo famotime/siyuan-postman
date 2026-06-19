@@ -12,6 +12,7 @@ export interface HttpEmailConfig {
   httpProvider: HttpEmailProvider
   httpApiKey: string
   httpEndpoint?: string // 可选自定义 endpoint
+  httpFrom?: string
   useResendOnDesktop?: boolean
 }
 
@@ -41,6 +42,10 @@ function getEmailDomain(value: unknown): string {
   const match = text.match(/<([^>]+)>$/)
   const email = (match?.[1] || text).trim()
   return email.includes('@') ? email.split('@').pop() || '' : ''
+}
+
+function resolveResendFrom(httpConfig: HttpEmailConfig): string {
+  return httpConfig.httpFrom?.trim() || DEFAULT_RESEND_FROM
 }
 
 function logForwardProxyRequest(
@@ -153,10 +158,7 @@ async function postJsonViaSiyuanForwardProxy(
   apiKey: string,
   body: Record<string, any>,
 ): Promise<void> {
-  const resendBody = {
-    ...body,
-    from: DEFAULT_RESEND_FROM,
-  }
+  const resendBody = { ...body }
 
   const payload = {
     url: endpoint,
@@ -301,7 +303,7 @@ export async function sendEmailViaHttp(options: SendEmailOptions): Promise<void>
   }
 
   const composerAdapter = createMobileComposerAdapter()
-  const fromAddress = DEFAULT_RESEND_FROM
+  const fromAddress = resolveResendFrom(httpConfig)
 
   if (mode === 'body') {
     const { html, attachments } = await composeBodyEmailWithAdapter(htmlContent, composerAdapter)

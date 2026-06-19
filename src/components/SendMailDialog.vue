@@ -456,6 +456,7 @@ async function handleSend() {
         httpProvider: httpConfigRef.value.httpProvider,
         httpApiKey: httpConfigRef.value.httpApiKey,
         httpEndpoint: httpConfigRef.value.httpEndpoint,
+        httpFrom: httpConfigRef.value.httpFrom,
         useResendOnDesktop: httpConfigRef.value.useResendOnDesktop,
       } : undefined,
       to: toList,

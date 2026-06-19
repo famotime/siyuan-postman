@@ -27,9 +27,10 @@ test('both views use shared form and action primitives', () => {
   for (const source of [settingSource, sendSource]) {
     assert.notEqual(source.indexOf('postman-field'), -1)
     assert.notEqual(source.indexOf('postman-control'), -1)
-    assert.notEqual(source.indexOf('postman-actions'), -1)
     assert.notEqual(source.indexOf('postman-btn'), -1)
   }
+
+  assert.notEqual(sendSource.indexOf('postman-actions'), -1)
 })
 
 test('shared styles define design tokens and form primitives', () => {
@@ -91,6 +92,19 @@ test('http settings expose desktop Resend sending switch', () => {
   assert.equal(source.indexOf('settingHttpUseResendOnDesktopHint'), -1)
 })
 
+test('http settings expose Resend sender address field', () => {
+  const source = readFileSync(new URL('./SettingPanel.vue', import.meta.url), 'utf8')
+
+  for (const token of [
+    'v-model="httpForm.httpFrom"',
+    'settingHttpFrom',
+    'settingHttpFromPlaceholder',
+    'httpFrom: httpForm.httpFrom',
+  ]) {
+    assert.notEqual(source.indexOf(token), -1)
+  }
+})
+
 test('desktop Resend switch appears above the API key field', () => {
   const source = readFileSync(new URL('./SettingPanel.vue', import.meta.url), 'utf8')
 
@@ -100,4 +114,16 @@ test('desktop Resend switch appears above the API key field', () => {
   assert.notEqual(switchIndex, -1)
   assert.notEqual(apiKeyIndex, -1)
   assert.equal(switchIndex < apiKeyIndex, true)
+})
+
+test('settings panel autosaves without a save button', () => {
+  const source = readFileSync(new URL('./SettingPanel.vue', import.meta.url), 'utf8')
+
+  assert.equal(source.indexOf('handleSaveAll'), -1)
+  assert.equal(source.indexOf('savedMsg'), -1)
+  assert.equal(source.indexOf('settingSave'), -1)
+  assert.notEqual(source.indexOf('settingRelayHint'), -1)
+  assert.notEqual(source.indexOf('scheduleSmtpAutoSave'), -1)
+  assert.notEqual(source.indexOf('scheduleHttpAutoSave'), -1)
+  assert.notEqual(source.indexOf('saveHttpConfigNow'), -1)
 })

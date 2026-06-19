@@ -237,6 +237,7 @@ export interface HttpEmailConfigState {
   httpProvider: HttpEmailProvider
   httpApiKey: string
   httpEndpoint: string
+  httpFrom: string
   httpTestEmail: string
   useResendOnDesktop: boolean
 }
@@ -247,6 +248,7 @@ const DEFAULT_HTTP_CONFIG: HttpEmailConfigState = {
   httpProvider: 'resend',
   httpApiKey: '',
   httpEndpoint: '',
+  httpFrom: '',
   httpTestEmail: '',
   useResendOnDesktop: false,
 }
@@ -266,6 +268,7 @@ export async function loadHttpEmailConfig(): Promise<HttpEmailConfigState> {
         httpProvider: (data as any).httpProvider === 'resend' ? 'resend' : 'resend',
         httpApiKey: typeof (data as any).httpApiKey === 'string' ? (data as any).httpApiKey : '',
         httpEndpoint: typeof (data as any).httpEndpoint === 'string' ? (data as any).httpEndpoint : '',
+        httpFrom: typeof (data as any).httpFrom === 'string' ? (data as any).httpFrom : '',
         httpTestEmail: typeof (data as any).httpTestEmail === 'string' ? (data as any).httpTestEmail : '',
         useResendOnDesktop: Boolean((data as any).useResendOnDesktop),
       }

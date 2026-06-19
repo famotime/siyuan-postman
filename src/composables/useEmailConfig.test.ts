@@ -180,10 +180,30 @@ test('saveHttpEmailConfig persists desktop Resend usage flag', async () => {
     httpProvider: 'resend',
     httpApiKey: 're_demo',
     httpEndpoint: '',
+    httpFrom: '',
     httpTestEmail: '',
     useResendOnDesktop: true,
   })
 
   assert.equal(useHttpEmailConfig().value.useResendOnDesktop, true)
   assert.equal(saved[saved.length - 1].useResendOnDesktop, true)
+})
+
+test('loadHttpEmailConfig preserves configured Resend sender address', async () => {
+  const plugin = {
+    loadData: async () => ({
+      httpProvider: 'resend',
+      httpApiKey: 're_demo',
+      httpEndpoint: '',
+      httpFrom: '"Docs" <docs@example.com>',
+      httpTestEmail: 'to@example.com',
+      useResendOnDesktop: true,
+    }),
+    saveData: async () => {},
+  }
+
+  bindPlugin(plugin as any)
+  const state = await loadHttpEmailConfig()
+
+  assert.equal(state.httpFrom, '"Docs" <docs@example.com>')
 })

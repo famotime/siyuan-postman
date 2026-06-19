@@ -59,3 +59,9 @@ test('desktop dialog can route through Resend when http setting is enabled', () 
     assert.notEqual(source.indexOf(token), -1)
   }
 })
+
+test('send dialog passes configured Resend sender address to HTTP service', () => {
+  const source = readFileSync(new URL('./SendMailDialog.vue', import.meta.url), 'utf8')
+
+  assert.notEqual(source.indexOf('httpFrom: httpConfigRef.value.httpFrom'), -1)
+})
