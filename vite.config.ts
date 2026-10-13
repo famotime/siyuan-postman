@@ -4,8 +4,6 @@ import vue from "@vitejs/plugin-vue"
 import fg from "fast-glob"
 import minimist from "minimist"
 import livereload from "rollup-plugin-livereload"
-import nodeResolve from "@rollup/plugin-node-resolve"
-import commonjs from "@rollup/plugin-commonjs"
 import {
   defineConfig,
   loadEnv,
@@ -81,8 +79,14 @@ export default defineConfig(({
           },
           {
             // 将 nodemailer 随插件一起分发，在 Electron 中通过 __dirname 动态绝对路径加载
-            src: "./node_modules/nodemailer",
-            dest: "./node_modules/",
+            // 仅分发运行必需的代码及元数据，避免将点开头的开发配置文件（如 .gitattributes, .ncurc.js, .prettierrc.js）带入产物
+            src: [
+              "./node_modules/nodemailer/lib",
+              "./node_modules/nodemailer/package.json",
+              "./node_modules/nodemailer/LICENSE",
+              "./node_modules/nodemailer/README.md",
+            ],
+            dest: "./node_modules/nodemailer/",
           },
         ],
       }),
@@ -143,6 +147,8 @@ export default defineConfig(({
                   inDir: "./dist",
                   outDir: "./",
                   outFileName: "package.zip",
+                  // 过滤以点开头的文件和目录，确保符合思源集市规范，避免数据同步异常
+                  filter: (fileName) => !fileName.startsWith("."),
                 }),
               ]),
         ],

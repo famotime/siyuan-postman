@@ -15,7 +15,9 @@
     "release:patch": "node ./release.js --mode=patch",
     "release:minor": "node ./release.js --mode=minor",
     "release:major": "node ./release.js --mode=major",
-    "build": "vite build",
+    "build": "vite build && node ./scripts/verify-package.mjs",
+    "test": "node --test tests/release-preflight.test.mjs",
+    "verify:package": "node ./scripts/verify-package.mjs",
     "changelog:extract": "node ./scripts/extract-changelog.mjs",
     "preinstall": "npx --yes only-allow pnpm"
   },

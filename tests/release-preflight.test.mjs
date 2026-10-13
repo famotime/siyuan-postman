@@ -20,6 +20,15 @@ test('release package includes Bazaar root files', async () => {
   }
 })
 
+test('release package does not contain dot-prefixed entries', async () => {
+  const zipBuffer = await readFile(packageZipPath)
+  const zip = await JSZip.loadAsync(zipBuffer)
+  const dotEntries = Object.keys(zip.files).filter((entry) => {
+    return entry.split('/').filter(Boolean).some((part) => part.startsWith('.') && part !== '.' && part !== '..')
+  })
+  assert.deepEqual(dotEntries, [], `package.zip contains dot-prefixed entries: ${dotEntries.join(', ')}`)
+})
+
 test('README uses GitHub raw URLs for screenshots', async () => {
   const readme = await readFile(readmePath, 'utf8')
   const imageLinks = [...readme.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)].map(match => match[1])

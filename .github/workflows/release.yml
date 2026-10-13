@@ -38,6 +38,12 @@ jobs:
       - name: Build plugin package
         run: pnpm run build
 
+      - name: Verify plugin package
+        run: pnpm run verify:package
+
+      - name: Run release preflight tests
+        run: pnpm run test
+
       - name: Extract Release Notes from CHANGELOG.md
         id: extract_notes
         run: |
