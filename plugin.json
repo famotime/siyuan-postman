@@ -1,8 +1,8 @@
 {
   "name": "siyuan-postman",
-  "author": "QuincyZou",
+  "author": "Quincy Zou",
   "url": "https://github.com/famotime/siyuan-postman",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "minAppVersion": "2.10.14",
   "backends": [
     "all"
@@ -12,8 +12,8 @@
     "mobile"
   ],
   "displayName": {
-    "default": "邮递员 - 一键发送文档邮件",
-    "en_US": "Postman - Send Doc as Email"
+    "default": "邮递员",
+    "en_US": "Postman"
   },
   "description": {
     "default": "将思源笔记文档一键发送为邮件（正文或附件），预置支持 QQ、163、189、139 等常用邮箱。",

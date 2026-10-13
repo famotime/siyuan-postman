@@ -1,21 +1,25 @@
 {
   "name": "siyuan-postman",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "type": "module",
   "description": "Send SiYuan documents as email (body or attachment)",
-  "author": "QuincyZou",
+  "author": "Quincy Zou",
   "license": "MIT",
   "homepage": "https://github.com/famotime/siyuan-postman",
   "repository": "https://github.com/famotime/siyuan-postman",
   "scripts": {
     "dev": "vite build --watch",
     "release": "node ./release.js",
+    "release:changelog": "node ./release.js --mode=changelog",
     "release:manual": "node ./release.js --mode=manual",
     "release:patch": "node ./release.js --mode=patch",
     "release:minor": "node ./release.js --mode=minor",
     "release:major": "node ./release.js --mode=major",
-    "build": "vite build"
+    "build": "vite build",
+    "changelog:extract": "node ./scripts/extract-changelog.mjs",
+    "preinstall": "npx --yes only-allow pnpm"
   },
+  "packageManager": "pnpm@10.18.3",
   "dependencies": {
     "jszip": "^3.10.1",
     "nodemailer": "^6.9.9",
