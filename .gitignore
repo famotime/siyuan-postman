@@ -1,7 +1,6 @@
 .idea
 # .vscode
 .DS_Store
-pnpm-lock.yaml
 node_modules
 dev
 dist
@@ -12,3 +11,5 @@ tmp
 /plugin-sample-vite-vue/
 /reference_docs/
 developer_docs/
+*.zip
+package.zip
